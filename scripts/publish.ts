@@ -22,6 +22,15 @@ if (!version) {
   process.exit(1);
 }
 
+async function isPublished(name: string, targetVersion: string) {
+  try {
+    const output = await $`npm view ${name} version`.text();
+    return output.trim() === targetVersion;
+  } catch {
+    return false;
+  }
+}
+
 console.log(`\n🚀 Publishing ${pkg.name} v${version}${dryRun ? " (DRY RUN)" : ""}\n`);
 console.log("─".repeat(50));
 
@@ -96,6 +105,8 @@ for (const [name] of Object.entries(binaries)) {
   if (dryRun) {
     await $`npm publish --access public --dry-run --tag dry-run`.cwd(targetPath);
     console.log(`✅ Would publish ${name}`);
+  } else if (await isPublished(name, version)) {
+    console.log(`⏭️  Skipping ${name} (already published)`);
   } else {
     await $`npm publish --access public`.cwd(targetPath);
     console.log(`✅ Published ${name}`);
@@ -109,6 +120,8 @@ const mainPackagePath = path.join(dir, "dist", targetpackageName);
 if (dryRun) {
   await $`npm publish --access public --dry-run --tag dry-run`.cwd(mainPackagePath);
   console.log(`✅ Would publish ${pkg.name}`);
+} else if (await isPublished(pkg.name, version)) {
+  console.log(`⏭️  Skipping ${pkg.name} (already published)`);
 } else {
   await $`npm publish --access public`.cwd(mainPackagePath);
   console.log(`✅ Published ${pkg.name}`);
