@@ -14,10 +14,14 @@ export interface GeneratedImage {
 }
 
 const PROFILE = process.env.CODEX_WRAPPED_PROFILE === "1";
+let wasmInit: Promise<void> | null = null;
 
 async function renderSvg(stats: CodexStats): Promise<string> {
   const t0 = PROFILE ? performance.now() : 0;
-  await initWasm(Bun.file(resvgWasm).arrayBuffer());
+  if (!wasmInit) {
+    wasmInit = initWasm(Bun.file(resvgWasm).arrayBuffer());
+  }
+  await wasmInit;
   if (PROFILE) {
     console.log(`profile: initWasm ${(performance.now() - t0).toFixed(1)}ms`);
   }
