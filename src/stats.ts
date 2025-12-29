@@ -18,7 +18,8 @@ export async function calculateStats(year: number): Promise<CodexStats> {
   const weekdayCounts: [number, number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0, 0];
 
   for (const [date, count] of dailyActivity.entries()) {
-    const weekday = new Date(date).getDay();
+    // Parse YYYY-MM-DD as a local date to avoid UTC day-shift
+    const weekday = parseDateKey(date).getDay();
     weekdayCounts[weekday] += count;
   }
 
@@ -193,8 +194,8 @@ function calculateStreaks(
   let maxStreakEnd = 0;
 
   for (let i = 1; i < activeDates.length; i++) {
-    const prevDate = new Date(activeDates[i - 1]);
-    const currDate = new Date(activeDates[i]);
+    const prevDate = parseDateKey(activeDates[i - 1]);
+    const currDate = parseDateKey(activeDates[i]);
 
     // Calculate difference in days
     const diffTime = currDate.getTime() - prevDate.getTime();
