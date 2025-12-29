@@ -22,7 +22,7 @@ const LEGEND_CELL_SIZE = components.legend.cellSize;
 const LEGEND_GAP = components.legend.gap;
 
 export function ActivityHeatmap({ dailyActivity, year, maxStreakDays }: HeatmapProps) {
-  const weeks = generateWeeksForYear(year);
+  const weeks = dropInactiveFirstWeek(generateWeeksForYear(year), dailyActivity);
 
   const counts = Array.from(dailyActivity.values());
   const maxCount = counts.length > 0 ? Math.max(...counts) : 0;
@@ -42,6 +42,13 @@ export function ActivityHeatmap({ dailyActivity, year, maxStreakDays }: HeatmapP
       <HeatmapLegend />
     </div>
   );
+}
+
+function dropInactiveFirstWeek(weeks: (string | null)[][], dailyActivity: Map<string, number>) {
+  if (weeks.length === 0) return weeks;
+  const firstWeek = weeks[0];
+  const hasActivity = firstWeek.some((dateStr) => dateStr && (dailyActivity.get(dateStr) ?? 0) > 0);
+  return hasActivity ? weeks : weeks.slice(1);
 }
 
 function MonthLabelsRow({ labels }: { labels: MonthLabel[] }) {
@@ -88,7 +95,8 @@ function HeatmapGrid({ weeks, dailyActivity, maxStreakDays, maxCount }: HeatmapG
         display: "flex",
         flexDirection: "row",
         gap: CELL_GAP,
-        flexWrap: "wrap",
+        flexWrap: "nowrap",
+        overflow: "hidden",
         maxWidth: "100%",
       }}
     >
