@@ -231,7 +231,7 @@ export const components = {
   sectionHeader: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
-    color: colors.accent.primary, // Golden yellow like BetRivers
+    color: colors.text.tertiary,
     letterSpacing: typography.letterSpacing.wide,
     textTransform: "uppercase" as const,
   },

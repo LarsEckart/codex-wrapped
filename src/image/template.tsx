@@ -1,7 +1,17 @@
 import type { CodexStats, WeekdayActivity } from "../types";
-import { formatNumberFull, formatDate, formatDateNoYear } from "../utils/format";
+import {
+  formatNumberFull,
+  formatDate,
+  formatDateNoYear,
+} from "../utils/format";
 import { ActivityHeatmap } from "./heatmap";
-import { colors, typography, spacing, layout, components } from "./design-tokens";
+import {
+  colors,
+  typography,
+  spacing,
+  layout,
+  components,
+} from "./design-tokens";
 import logoBase64 from "../../assets/images/codex-logo.base64.txt" with { type: "text" };
 
 const CODEX_LOGO_DATA_URL = `data:image/png;base64,${logoBase64.trim()}`;
@@ -51,14 +61,26 @@ export function WrappedTemplate({ stats }: { stats: CodexStats }) {
       />
       <Header year={stats.year} />
 
-      <div style={{ marginTop: spacing[8], display: "flex", flexDirection: "row", gap: spacing[6], alignItems: "flex-start" }}>
+      <div
+        style={{
+          marginTop: spacing[8],
+          display: "flex",
+          flexDirection: "row",
+          gap: spacing[6],
+          alignItems: "flex-start",
+        }}
+      >
         <HeroStatItem
           label="Started"
           value={formatDateNoYear(stats.firstSessionDate)}
         />
         <HeroStatItem
           label="Most Active Day"
-          value={stats.mostActiveDay ? `${stats.weekdayActivity.mostActiveDayName}, ${stats.mostActiveDay.formattedDate}` : "N/A"}
+          value={
+            stats.mostActiveDay
+              ? `${stats.weekdayActivity.mostActiveDayName}, ${stats.mostActiveDay.formattedDate}`
+              : "N/A"
+          }
         />
 
         <div
@@ -88,7 +110,11 @@ export function WrappedTemplate({ stats }: { stats: CodexStats }) {
       </div>
 
       <Section title="Activity" marginTop={spacing[8]}>
-        <ActivityHeatmap dailyActivity={stats.dailyActivity} year={stats.year} maxStreakDays={stats.maxStreakDays} />
+        <ActivityHeatmap
+          dailyActivity={stats.dailyActivity}
+          year={stats.year}
+          maxStreakDays={stats.maxStreakDays}
+        />
       </Section>
 
       <div
@@ -116,9 +142,18 @@ export function WrappedTemplate({ stats }: { stats: CodexStats }) {
             flex: 1,
           }}
         >
-          <StatBox label="Projects" value={formatNumberFull(stats.totalProjects)} />
-          <StatBox label="Sessions" value={formatNumberFull(stats.totalSessions)} />
-          <StatBox label="Messages" value={formatNumberFull(stats.totalMessages)} />
+          <StatBox
+            label="Projects"
+            value={formatNumberFull(stats.totalProjects)}
+          />
+          <StatBox
+            label="Sessions"
+            value={formatNumberFull(stats.totalSessions)}
+          />
+          <StatBox
+            label="Messages"
+            value={formatNumberFull(stats.totalMessages)}
+          />
         </div>
       </div>
     </div>
@@ -208,13 +243,22 @@ const BAR_GAP = 8;
 
 const HERO_STAT_CONTENT_HEIGHT = BAR_HEIGHT + spacing[2] + 50;
 
-function HeroStatItem({ label, subtitle, value }: { label: string; subtitle?: string; value: string }) {
+function HeroStatItem({
+  label,
+  subtitle,
+  value,
+}: {
+  label: string;
+  subtitle?: string;
+  value: string;
+}) {
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
+        justifyContent: "flex-start",
+        gap: spacing[2],
         backgroundColor: colors.surface,
         borderRadius: layout.radius.lg,
         padding: spacing[8],
@@ -233,36 +277,57 @@ function HeroStatItem({ label, subtitle, value }: { label: string; subtitle?: st
       >
         {label}
       </span>
-      {subtitle && (
-        <span
-          style={{
-            fontSize: typography.size['xl'],
-            fontWeight: typography.weight.medium,
-            color: colors.text.tertiary,
-          }}
-        >
-          {subtitle}
-        </span>
-      )}
-      <span
+      <div
         style={{
-          fontSize: typography.size["3xl"],
-          fontWeight: typography.weight.medium,
-          color: colors.text.primary,
-          lineHeight: typography.lineHeight.none,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: spacing[2],
+          flex: 1,
         }}
       >
-        {value}
-      </span>
+        {subtitle && (
+          <span
+            style={{
+              fontSize: typography.size["xl"],
+              fontWeight: typography.weight.medium,
+              color: colors.text.tertiary,
+            }}
+          >
+            {subtitle}
+          </span>
+        )}
+        <span
+          style={{
+            fontSize: typography.size["3xl"],
+            fontWeight: typography.weight.medium,
+            color: colors.text.primary,
+            lineHeight: typography.lineHeight.none,
+          }}
+        >
+          {value}
+        </span>
+      </div>
     </div>
   );
 }
 
-function WeeklyBarChart({ weekdayActivity }: { weekdayActivity: WeekdayActivity }) {
+function WeeklyBarChart({
+  weekdayActivity,
+}: {
+  weekdayActivity: WeekdayActivity;
+}) {
   const { counts, mostActiveDay, maxCount } = weekdayActivity;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: spacing[2] }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: spacing[2],
+        marginTop: spacing[3],
+      }}
+    >
       <div
         style={{
           display: "flex",
@@ -293,7 +358,9 @@ function WeeklyBarChart({ weekdayActivity }: { weekdayActivity: WeekdayActivity 
                   width: "100%",
                   maxWidth: BAR_MAX_WIDTH,
                   height: barHeight,
-                  backgroundColor: isHighlighted ? colors.accent.primary : colors.streak.level4,
+                  backgroundColor: isHighlighted
+                    ? colors.accent.primary
+                    : colors.streak.level4,
                   borderRadius: 4,
                 }}
               />
@@ -319,8 +386,12 @@ function WeeklyBarChart({ weekdayActivity }: { weekdayActivity: WeekdayActivity 
                 display: "flex",
                 justifyContent: "center",
                 fontSize: typography.size.sm,
-                fontWeight: isHighlighted ? typography.weight.bold : typography.weight.regular,
-                color: isHighlighted ? colors.accent.primary : colors.text.muted,
+                fontWeight: isHighlighted
+                  ? typography.weight.bold
+                  : typography.weight.regular,
+                color: isHighlighted
+                  ? colors.accent.primary
+                  : colors.text.muted,
               }}
             >
               {WEEKDAY_LABELS[i]}
@@ -332,7 +403,15 @@ function WeeklyBarChart({ weekdayActivity }: { weekdayActivity: WeekdayActivity 
   );
 }
 
-function Section({ title, marginTop = 0, children }: { title: string; marginTop?: number; children: React.ReactNode }) {
+function Section({
+  title,
+  marginTop = 0,
+  children,
+}: {
+  title: string;
+  marginTop?: number;
+  children: React.ReactNode;
+}) {
   return (
     <div
       style={{
@@ -363,7 +442,15 @@ interface RankingItem {
   logoUrl?: string;
 }
 
-function RankingList({ title, items, maxItems = 3 }: { title: string; items: RankingItem[]; maxItems?: number }) {
+function RankingList({
+  title,
+  items,
+  maxItems = 3,
+}: {
+  title: string;
+  items: RankingItem[];
+  maxItems?: number;
+}) {
   const displayItems = items.slice(0, maxItems);
 
   return (
@@ -398,7 +485,12 @@ function RankingList({ title, items, maxItems = 3 }: { title: string; items: Ran
         }}
       >
         {displayItems.map((item, index) => (
-          <RankingItemRow key={index} rank={index + 1} name={item.name} logoUrl={item.logoUrl} />
+          <RankingItemRow
+            key={index}
+            rank={index + 1}
+            name={item.name}
+            logoUrl={item.logoUrl}
+          />
         ))}
       </div>
     </div>
