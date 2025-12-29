@@ -59,10 +59,8 @@ codex-wrapped
 - Sessions, messages, tokens, projects, and streaks
 - GitHub-style activity heatmap
 - Top models and providers breakdown
-- Usage cost (when available)
 - Shareable PNG image
 - Inline image display (Ghostty, Kitty, iTerm2, WezTerm, Konsole)
-- Auto-copy to clipboard
 
 ## Terminal Support
 
@@ -82,8 +80,7 @@ The wrapped image displays natively in terminals that support inline images:
 The tool generates:
 
 1. **Terminal Summary** — Quick stats overview in your terminal
-2. **PNG Image** — A beautiful, shareable wrapped card saved to your home directory
-3. **Clipboard** — Automatically copies the image to your clipboard
+2. **PNG Image** — A beautiful, shareable wrapped card you can save to your home directory
 
 ## Data Source
 
