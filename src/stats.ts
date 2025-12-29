@@ -74,7 +74,7 @@ export async function calculateStats(year: number): Promise<CodexStats> {
 
   const topModels = modelStats
     .sort((a, b) => b.count - a.count)
-    .slice(0, 3)
+    .slice(0, 6)
     .map((model) => ({
       ...model,
       percentage: percentageDenominator > 0 ? (model.count / percentageDenominator) * 100 : 0,

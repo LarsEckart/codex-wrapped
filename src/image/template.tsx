@@ -1,5 +1,5 @@
 import type { CodexStats, WeekdayActivity } from "../types";
-import { formatNumberFull, formatCostFull, formatDate } from "../utils/format";
+import { formatNumberFull, formatDate, formatDateNoYear } from "../utils/format";
 import { ActivityHeatmap } from "./heatmap";
 import { colors, typography, spacing, layout, components } from "./design-tokens";
 import logoBase64 from "../../assets/images/codex-logo.base64.txt" with { type: "text" };
@@ -32,7 +32,7 @@ export function WrappedTemplate({ stats }: { stats: CodexStats }) {
           right: -160,
           width: 560,
           height: 560,
-          backgroundColor: colors.accent.primary,
+          backgroundColor: colors.accent.secondary,
           opacity: 0.18,
           borderRadius: layout.radius.full,
         }}
@@ -51,16 +51,14 @@ export function WrappedTemplate({ stats }: { stats: CodexStats }) {
       />
       <Header year={stats.year} />
 
-      <div style={{ marginTop: spacing[8], display: "flex", flexDirection: "row", gap: spacing[16], alignItems: "flex-start" }}>
+      <div style={{ marginTop: spacing[8], display: "flex", flexDirection: "row", gap: spacing[6], alignItems: "flex-start" }}>
         <HeroStatItem
           label="Started"
-          subtitle={formatDate(stats.firstSessionDate)}
-          value={`${stats.daysSinceFirstSession} Days Ago`}
+          value={formatDateNoYear(stats.firstSessionDate)}
         />
         <HeroStatItem
           label="Most Active Day"
-          subtitle={stats.weekdayActivity.mostActiveDayName}
-          value={stats.mostActiveDay?.formattedDate ?? "N/A"}
+          value={stats.mostActiveDay ? `${stats.weekdayActivity.mostActiveDayName}, ${stats.mostActiveDay.formattedDate}` : "N/A"}
         />
 
         <div
@@ -71,6 +69,7 @@ export function WrappedTemplate({ stats }: { stats: CodexStats }) {
             borderRadius: layout.radius.lg,
             padding: spacing[8],
             border: `1px solid ${colors.surfaceBorder}`,
+            flex: 1,
           }}
         >
           <span
@@ -97,20 +96,31 @@ export function WrappedTemplate({ stats }: { stats: CodexStats }) {
           marginTop: spacing[8],
           display: "flex",
           flexDirection: "row",
-          gap: spacing[16],
+          gap: spacing[6],
         }}
       >
-        <RankingList
-          title="Top Models"
-          items={stats.topModels.map((m) => ({
-            name: m.name,
-          }))}
-        />
-        <InsightCard stats={stats} />
+        <div style={{ flex: 1, display: "flex" }}>
+          <RankingList
+            title="Top Models"
+            items={stats.topModels.map((m) => ({
+              name: m.name,
+            }))}
+            maxItems={5}
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: spacing[5],
+            flex: 1,
+          }}
+        >
+          <StatBox label="Projects" value={formatNumberFull(stats.totalProjects)} />
+          <StatBox label="Sessions" value={formatNumberFull(stats.totalSessions)} />
+          <StatBox label="Messages" value={formatNumberFull(stats.totalMessages)} />
+        </div>
       </div>
-
-      <StatsGrid stats={stats} />
-      <Footer />
     </div>
   );
 }
@@ -166,7 +176,7 @@ function Header({ year }: { year: number }) {
               fontSize: typography.size["3xl"],
               fontWeight: typography.weight.medium,
               letterSpacing: typography.letterSpacing.normal,
-              color: colors.text.tertiary,
+              color: colors.text.primary,
               lineHeight: typography.lineHeight.none,
             }}
           >
@@ -189,7 +199,9 @@ function Header({ year }: { year: number }) {
   );
 }
 
-const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+// Reorder indices from Sun=0 based to Mon=0 based
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const BAR_HEIGHT = 100;
 const BAR_WIDTH = 56;
 const BAR_GAP = 12;
@@ -234,7 +246,7 @@ function HeroStatItem({ label, subtitle, value }: { label: string; subtitle?: st
       )}
       <span
         style={{
-          fontSize: typography.size["4xl"],
+          fontSize: typography.size["3xl"],
           fontWeight: typography.weight.medium,
           color: colors.text.primary,
           lineHeight: typography.lineHeight.none,
@@ -260,10 +272,11 @@ function WeeklyBarChart({ weekdayActivity }: { weekdayActivity: WeekdayActivity 
           height: BAR_HEIGHT,
         }}
       >
-        {counts.map((count, i) => {
+        {WEEKDAY_ORDER.map((dayIndex, i) => {
+          const count = counts[dayIndex];
           const heightPercent = maxCount > 0 ? count / maxCount : 0;
           const barHeight = Math.max(8, Math.round(heightPercent * BAR_HEIGHT));
-          const isHighlighted = i === mostActiveDay;
+          const isHighlighted = dayIndex === mostActiveDay;
 
           return (
             <div
@@ -286,8 +299,8 @@ function WeeklyBarChart({ weekdayActivity }: { weekdayActivity: WeekdayActivity 
           gap: BAR_GAP,
         }}
       >
-        {WEEKDAY_LABELS.map((label, i) => {
-          const isHighlighted = i === mostActiveDay;
+        {WEEKDAY_ORDER.map((dayIndex, i) => {
+          const isHighlighted = dayIndex === mostActiveDay;
           return (
             <div
               key={i}
@@ -300,7 +313,7 @@ function WeeklyBarChart({ weekdayActivity }: { weekdayActivity: WeekdayActivity 
                 color: isHighlighted ? colors.accent.primary : colors.text.muted,
               }}
             >
-              {label}
+              {WEEKDAY_LABELS[i]}
             </div>
           );
         })}
@@ -340,18 +353,20 @@ interface RankingItem {
   logoUrl?: string;
 }
 
-function RankingList({ title, items }: { title: string; items: RankingItem[] }) {
+function RankingList({ title, items, maxItems = 3 }: { title: string; items: RankingItem[]; maxItems?: number }) {
+  const displayItems = items.slice(0, maxItems);
+
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
         gap: spacing[5],
-        flex: 1,
         backgroundColor: colors.surface,
         border: `1px solid ${colors.surfaceBorder}`,
         borderRadius: layout.radius.lg,
         padding: spacing[6],
+        flex: 1,
       }}
     >
       <span
@@ -372,8 +387,8 @@ function RankingList({ title, items }: { title: string; items: RankingItem[] }) 
           gap: spacing[4],
         }}
       >
-        {items.map((item, i) => (
-          <RankingItemRow key={i} rank={i + 1} name={item.name} logoUrl={item.logoUrl} />
+        {displayItems.map((item, index) => (
+          <RankingItemRow key={index} rank={index + 1} name={item.name} logoUrl={item.logoUrl} />
         ))}
       </div>
     </div>
@@ -432,130 +447,6 @@ function RankingItemRow({ rank, name, logoUrl }: RankingItemRowProps) {
   );
 }
 
-function InsightCard({ stats }: { stats: CodexStats }) {
-  const insights = [
-    stats.totalInputTokens > 0 && {
-      label: "Input",
-      value: `${formatNumberFull(stats.totalInputTokens)} tok`,
-    },
-    stats.totalCachedInputTokens > 0 && {
-      label: "Cache Read",
-      value: `${formatNumberFull(stats.totalCachedInputTokens)} tok`,
-    },
-    stats.totalOutputTokens > 0 && {
-      label: "Output",
-      value: `${formatNumberFull(stats.totalOutputTokens)} tok`,
-    },
-    stats.totalReasoningTokens > 0 && {
-      label: "Reasoning",
-      value: `${formatNumberFull(stats.totalReasoningTokens)} tok`,
-    },
-  ].filter(Boolean) as Array<{ label: string; value: string }>;
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: spacing[5],
-        flex: 1,
-        backgroundColor: colors.surface,
-        border: `1px solid ${colors.surfaceBorder}`,
-        borderRadius: layout.radius.lg,
-        padding: spacing[6],
-      }}
-    >
-      <span
-        style={{
-          fontSize: components.sectionHeader.fontSize,
-          fontWeight: components.sectionHeader.fontWeight,
-          color: components.sectionHeader.color,
-          letterSpacing: components.sectionHeader.letterSpacing,
-          textTransform: components.sectionHeader.textTransform,
-        }}
-      >
-        Usage Detail
-      </span>
-      <div style={{ display: "flex", flexDirection: "column", gap: spacing[3] }}>
-        {insights.map((item) => (
-          <div
-            key={item.label}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: spacing[4],
-            }}
-          >
-            <span
-              style={{
-                fontSize: typography.size.md,
-                fontWeight: typography.weight.medium,
-                color: colors.text.tertiary,
-              }}
-            >
-              {item.label}
-            </span>
-            <span
-              style={{
-                fontSize: typography.size.md,
-                fontWeight: typography.weight.semibold,
-                color: colors.text.primary,
-              }}
-            >
-              {item.value}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function StatsGrid({ stats }: { stats: CodexStats }) {
-  const hasCost = stats.hasUsageCost;
-
-  return (
-    <div
-      style={{
-        marginTop: spacing[4],
-        display: "flex",
-        flexDirection: "column",
-        gap: spacing[5],
-      }}
-    >
-      {hasCost ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
-          <div style={{ display: "flex", gap: spacing[5] }}>
-            <StatBox label="Sessions" value={formatNumberFull(stats.totalSessions)} />
-            <StatBox label="Messages" value={formatNumberFull(stats.totalMessages)} />
-            <StatBox label="Total Tokens" value={formatNumberFull(stats.totalTokens)} />
-          </div>
-
-          <div style={{ display: "flex", gap: spacing[5] }}>
-            <StatBox label="Projects" value={formatNumberFull(stats.totalProjects)} />
-            <StatBox label="Streak" value={`${stats.maxStreak}d`} />
-            <StatBox label="Usage Cost" value={formatCostFull(stats.totalCost)} />
-          </div>
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: spacing[5] }}>
-          <div style={{ display: "flex", gap: spacing[5] }}>
-            <StatBox label="Sessions" value={formatNumberFull(stats.totalSessions)} />
-            <StatBox label="Messages" value={formatNumberFull(stats.totalMessages)} />
-            <StatBox label="Tokens" value={formatNumberFull(stats.totalTokens)} />
-          </div>
-
-          <div style={{ display: "flex", gap: spacing[5] }}>
-            <StatBox label="Projects" value={formatNumberFull(stats.totalProjects)} />
-            <StatBox label="Streak" value={`${stats.maxStreak}d`} />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 interface StatBoxProps {
   label: string;
   value: string;
@@ -566,16 +457,16 @@ function StatBox({ label, value }: StatBoxProps) {
     <div
       style={{
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "row",
         backgroundColor: components.statBox.background,
-        paddingTop: components.statBox.padding.y,
-        paddingBottom: components.statBox.padding.y,
-        paddingLeft: components.statBox.padding.x,
-        paddingRight: components.statBox.padding.x,
-        gap: components.statBox.gap,
+        paddingTop: spacing[4],
+        paddingBottom: spacing[4],
+        paddingLeft: spacing[6],
+        paddingRight: spacing[6],
+        gap: spacing[4],
         flex: 1,
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "space-between",
         borderRadius: components.statBox.borderRadius,
         border: `1px solid ${colors.surfaceBorder}`,
       }}

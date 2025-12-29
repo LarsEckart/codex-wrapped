@@ -10,63 +10,64 @@
 // =============================================================================
 
 /**
- * Core color palette - Codex dark theme with blue/cyan accents
+ * Core color palette - BetRivers-inspired dark navy with yellow/gold accents
  * All text colors meet WCAG AA standards where possible for legibility
  */
 export const colors = {
-  // Backgrounds
-  background: "#0B0F1A", // Deep navy
-  surface: "#131A2A", // Elevated surface for cards
-  surfaceHover: "#192238", // Hover state for surfaces
-  surfaceBorder: "#22304D", // Subtle border for depth
+  // Backgrounds - BetRivers dark navy
+  background: "#0E1929", // Deep navy (BetRivers style)
+  surface: "#152035", // Elevated surface for cards
+  surfaceHover: "#1C2A45", // Hover state for surfaces
+  surfaceBorder: "#2A3D5C", // Subtle border for depth
 
-  // Text hierarchy (contrast ratios against #0A0A0A)
+  // Text hierarchy (contrast ratios against dark navy)
   text: {
-    primary: "#E9EEF8", // Primary content
-    secondary: "#C1CCDE", // Secondary content
-    tertiary: "#8FA1C2", // Labels and captions
-    muted: "#6C7FA1", // Footer/subtle text
-    disabled: "#4C5D79", // Disabled states
+    primary: "#FFFFFF", // Primary content (white)
+    secondary: "#E0E6EF", // Secondary content
+    tertiary: "#A0B0C8", // Labels and captions
+    muted: "#7088A8", // Footer/subtle text
+    disabled: "#4C6080", // Disabled states
   },
 
-  // Accent colors
+  // Accent colors - BetRivers bright yellow
   accent: {
-    primary: "#3B82F6", // Codex blue
-    primaryHover: "#5A95F8",
-    secondary: "#22D3EE", // Cyan accent
-    tertiary: "#F59E0B", // Amber for highlights
+    primary: "#FFD700", // BetRivers bright yellow
+    primaryHover: "#FFE033",
+    secondary: "#2E7EE6", // BetRivers blue accent
+    tertiary: "#FFEB3B", // Light bright yellow for highlights
   },
 
   // Semantic colors
   semantic: {
     success: "#22C55E",
-    warning: "#F59E0B",
+    warning: "#FFB800",
     error: "#EF4444",
-    info: "#3B82F6",
+    info: "#2E7EE6",
   },
 
-  // Heatmap colors - blue progression (7 levels: 0-6)
+  // Heatmap colors - bright BetRivers yellow progression (7 levels: 0-6)
+  // Empty cells are visible against background for grid structure
   heatmap: {
-    empty: "#101827", // No activity
-    level1: "#1A2540", // Very low
-    level2: "#23325C", // Low
-    level3: "#2C3E78", // Medium-low
-    level4: "#3553A0", // Medium
-    level5: "#3B6DD4", // Medium-high
-    level6: "#3B82F6", // High
-    level7: "#60A5FA", // Very high
+    empty: "#1E2A3D", // No activity - visible against background
+    level1: "#4D4000", // Very low - dark yellow
+    level2: "#6B5A00", // Low - muted yellow
+    level3: "#8A7400", // Medium-low - yellow
+    level4: "#B89B00", // Medium - bright yellow
+    level5: "#D4B200", // Medium-high - vivid yellow
+    level6: "#F0C800", // High - bright gold
+    level7: "#FFD700", // Very high - BetRivers bright yellow
   },
 
-  // Streak colors - blue progression (7 levels: 0-6)
+  // Streak colors - bright BetRivers yellow progression (7 levels: 0-6)
   streak: {
-    empty: "#0D1628", // No activity (dark blue tint)
-    level1: "#13213A", // Very low
-    level2: "#1A2D52", // Low
-    level3: "#233B6D", // Medium-low
-    level4: "#2E4E93", // Medium
-    level5: "#3563B8", // Medium-high
-    level6: "#3B74D9", // High
-    level7: "#3B82F6", // Max (accent)
+    empty: "#1E2A3D", // No activity - visible against background
+    level1: "#4D4000", // Very low - dark yellow
+    level2: "#6B5A00", // Low - muted yellow
+    level3: "#8A7400", // Medium-low - yellow
+    level4: "#B89B00", // Medium - bright yellow
+    level5: "#D4B200", // Medium-high - vivid yellow
+    level6: "#F0C800", // High - bright gold
+    level7: "#FFD700", // Max - BetRivers bright yellow
   },
 } as const;
 
@@ -229,9 +230,9 @@ export const components = {
   // Section header styling
   sectionHeader: {
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.medium,
-    color: colors.text.secondary,
-    letterSpacing: typography.letterSpacing.wider,
+    fontWeight: typography.weight.bold,
+    color: colors.accent.primary, // Golden yellow like BetRivers
+    letterSpacing: typography.letterSpacing.wide,
     textTransform: "uppercase" as const,
   },
 

@@ -6,11 +6,14 @@ export function generateWeeksForYear(year: number): string[][] {
   // Start from Jan 1st of the year
   const startDate = new Date(year, 0, 1);
 
-  // Adjust to start from the first Sunday (or the day itself if it's Sunday)
+  // Adjust to start from the first Monday (or the day itself if it's Monday)
   const startDay = startDate.getDay();
   const adjustedStart = new Date(startDate);
-  if (startDay !== 0) {
-    adjustedStart.setDate(startDate.getDate() - startDay);
+  if (startDay === 0) {
+    // Sunday -> go back 6 days to Monday
+    adjustedStart.setDate(startDate.getDate() - 6);
+  } else if (startDay !== 1) {
+    adjustedStart.setDate(startDate.getDate() - (startDay - 1));
   }
 
   // End date is Dec 31st or today if it's the current year
@@ -35,8 +38,8 @@ export function generateWeeksForYear(year: number): string[][] {
       currentWeek.push("");
     }
 
-    // If it's Saturday (end of week) or we've passed the end date
-    if (dayOfWeek === 6) {
+    // If it's Sunday (end of week) or we've passed the end date
+    if (dayOfWeek === 0) {
       if (currentWeek.length > 0 && currentWeek.some((d) => d !== "")) {
         weeks.push(currentWeek);
       }
