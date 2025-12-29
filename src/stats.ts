@@ -97,7 +97,10 @@ export async function calculateStats(year: number): Promise<CodexStats> {
   const historyFirstTs = await getCodexFirstPromptTimestamp();
   const historyDate = historyFirstTs ? new Date(historyFirstTs * 1000) : null;
   let firstSessionDate = usageData.earliestSessionDate ?? historyDate ?? new Date();
-  if (historyDate && usageData.earliestSessionDate && historyDate < usageData.earliestSessionDate) {
+  const firstActivityDate = findFirstActivityDate(dailyActivity);
+  if (firstActivityDate) {
+    firstSessionDate = firstActivityDate;
+  } else if (historyDate && usageData.earliestSessionDate && historyDate < usageData.earliestSessionDate) {
     firstSessionDate = historyDate;
   }
   const daysSinceFirstSession = Math.floor((Date.now() - firstSessionDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -126,6 +129,18 @@ export async function calculateStats(year: number): Promise<CodexStats> {
     mostActiveDay,
     weekdayActivity,
   };
+}
+
+function findFirstActivityDate(dailyActivity: Map<string, number>): Date | null {
+  if (dailyActivity.size === 0) return null;
+  const sortedKeys = Array.from(dailyActivity.keys()).sort();
+  const firstKey = sortedKeys[0];
+  return firstKey ? parseDateKey(firstKey) : null;
+}
+
+function parseDateKey(dateKey: string): Date {
+  const [year, month, day] = dateKey.split("-").map((value) => Number(value));
+  return new Date(year, (month ?? 1) - 1, day ?? 1);
 }
 
 function resolveProviderId(modelId: string): string {

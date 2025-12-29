@@ -1,14 +1,15 @@
 // Data collector - reads Codex CLI storage and returns raw data
 
-import { createReadStream } from "node:fs";
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import os from "node:os";
-import { createInterface } from "node:readline";
 
 const CODEX_DATA_PATH = join(os.homedir(), ".codex");
 const CODEX_HISTORY_PATH = join(CODEX_DATA_PATH, "history.jsonl");
 const CODEX_SESSIONS_PATH = join(CODEX_DATA_PATH, "sessions");
+
+// Concurrency limit for parallel file processing
+const CONCURRENCY_LIMIT = 50;
 
 export interface CodexUsageEvent {
   timestamp: string;
@@ -50,37 +51,49 @@ export async function listCodexSessionFiles(year: number): Promise<string[]> {
     return files;
   }
 
-  for (const month of monthDirs) {
+  // Parallel processing of months
+  const monthPromises = monthDirs.map(async (month) => {
     const monthPath = join(yearPath, month);
+    const monthFiles: string[] = [];
+    
     let dayDirs: Array<string> = [];
     try {
       const entries = await readdir(monthPath, { withFileTypes: true });
       dayDirs = entries.filter((e) => e.isDirectory()).map((e) => e.name);
     } catch {
-      continue;
+      return monthFiles;
     }
 
-    for (const day of dayDirs) {
+    // Parallel processing of days within each month
+    const dayPromises = dayDirs.map(async (day) => {
       const dayPath = join(monthPath, day);
+      const dayFiles: string[] = [];
       try {
         const entries = await readdir(dayPath, { withFileTypes: true });
         for (const entry of entries) {
           if (entry.isFile() && entry.name.endsWith(".jsonl")) {
-            files.push(join(dayPath, entry.name));
+            dayFiles.push(join(dayPath, entry.name));
           }
         }
       } catch {
         // Ignore unreadable day directories
       }
-    }
-  }
+      return dayFiles;
+    });
 
-  return files;
+    const dayResults = await Promise.all(dayPromises);
+    return dayResults.flat();
+  });
+
+  const monthResults = await Promise.all(monthPromises);
+  return monthResults.flat();
 }
 
 export async function getCodexFirstPromptTimestamp(): Promise<number | null> {
   try {
-    const raw = await readFile(CODEX_HISTORY_PATH, "utf8");
+    // Use Bun's native file API for faster reading
+    const file = Bun.file(CODEX_HISTORY_PATH);
+    const raw = await file.text();
     let minTs: number | null = null;
     for (const line of raw.split("\n")) {
       if (!line.trim()) continue;
@@ -100,28 +113,36 @@ export async function getCodexFirstPromptTimestamp(): Promise<number | null> {
   }
 }
 
-export async function collectCodexUsageData(year: number): Promise<CodexUsageData> {
-  const files = await listCodexSessionFiles(year);
+// Result from processing a single session file
+interface FileProcessResult {
+  events: CodexUsageEvent[];
+  dailyMessages: Map<string, number>;
+  messageCount: number;
+  projects: string[];
+  earliestDate: Date | null;
+}
+
+// Process a single session file using Bun's native file API
+async function processSessionFile(filePath: string): Promise<FileProcessResult> {
   const events: CodexUsageEvent[] = [];
-  const dailyActivity = new Map<string, number>();
-  const projects = new Set<string>();
-  let totalMessages = 0;
-  let earliestSessionDate: Date | null = null;
+  const dailyMessages = new Map<string, number>();
+  const projects: string[] = [];
+  let messageCount = 0;
+  let earliestDate: Date | null = null;
+  let previousTotals: RawUsage | null = null;
+  let currentModel: string | undefined;
+  let currentModelIsFallback = false;
 
-  for (const filePath of files) {
-    let previousTotals: RawUsage | null = null;
-    let currentModel: string | undefined;
-    let currentModelIsFallback = false;
-    let legacyFallbackUsed = false;
+  try {
+    // Use Bun's native file API - much faster than Node's createReadStream
+    const file = Bun.file(filePath);
+    const content = await file.text();
+    const lines = content.split("\n");
 
-    const rl = createInterface({
-      input: createReadStream(filePath),
-      crlfDelay: Infinity,
-    });
-
-    for await (const line of rl) {
+    for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;
+      
       let entry: any;
       try {
         entry = JSON.parse(trimmed);
@@ -135,13 +156,13 @@ export async function collectCodexUsageData(year: number): Promise<CodexUsageDat
         const sessionTimestamp = entry?.payload?.timestamp ?? entry?.timestamp;
         if (sessionTimestamp) {
           const sessionDate = new Date(sessionTimestamp);
-          if (!earliestSessionDate || sessionDate < earliestSessionDate) {
-            earliestSessionDate = sessionDate;
+          if (!earliestDate || sessionDate < earliestDate) {
+            earliestDate = sessionDate;
           }
         }
         const cwd = entry?.payload?.cwd;
         if (cwd) {
-          projects.add(cwd);
+          projects.push(cwd);
         }
         continue;
       }
@@ -158,11 +179,11 @@ export async function collectCodexUsageData(year: number): Promise<CodexUsageDat
       if (entryType === "event_msg") {
         const payload = entry?.payload;
         if (payload?.type === "user_message") {
-          totalMessages += 1;
+          messageCount += 1;
           const timestamp = entry?.timestamp;
           if (timestamp) {
             const dateKey = formatDateKey(new Date(timestamp));
-            dailyActivity.set(dateKey, (dailyActivity.get(dateKey) || 0) + 1);
+            dailyMessages.set(dateKey, (dailyMessages.get(dateKey) || 0) + 1);
           }
           continue;
         }
@@ -200,7 +221,6 @@ export async function collectCodexUsageData(year: number): Promise<CodexUsageDat
         }
 
         const extractedModel = extractModel({ ...payload, info });
-        let isFallback = false;
         if (extractedModel) {
           currentModel = extractedModel;
           currentModelIsFallback = false;
@@ -209,12 +229,10 @@ export async function collectCodexUsageData(year: number): Promise<CodexUsageDat
         let model = extractedModel ?? currentModel;
         if (!model) {
           model = LEGACY_FALLBACK_MODEL;
-          isFallback = true;
-          legacyFallbackUsed = true;
           currentModel = model;
           currentModelIsFallback = true;
         } else if (!extractedModel && currentModelIsFallback) {
-          isFallback = true;
+          // Still using fallback
         }
 
         events.push({
@@ -226,15 +244,64 @@ export async function collectCodexUsageData(year: number): Promise<CodexUsageDat
           reasoningOutputTokens: delta.reasoningOutputTokens,
           totalTokens: delta.totalTokens,
         });
-
-        if (isFallback) {
-          // No-op for now; kept for parity with ccusage
-        }
       }
     }
+  } catch {
+    // Ignore unreadable files
+  }
 
-    if (legacyFallbackUsed) {
-      // ignore - best-effort
+  return { events, dailyMessages, messageCount, projects, earliestDate };
+}
+
+// Process files in parallel batches
+async function processFilesInParallel(files: string[]): Promise<FileProcessResult[]> {
+  const results: FileProcessResult[] = [];
+  
+  // Process in batches to avoid overwhelming the system
+  for (let i = 0; i < files.length; i += CONCURRENCY_LIMIT) {
+    const batch = files.slice(i, i + CONCURRENCY_LIMIT);
+    const batchResults = await Promise.all(batch.map(processSessionFile));
+    results.push(...batchResults);
+  }
+  
+  return results;
+}
+
+export async function collectCodexUsageData(year: number): Promise<CodexUsageData> {
+  const files = await listCodexSessionFiles(year);
+  
+  // Process all files in parallel
+  const fileResults = await processFilesInParallel(files);
+  
+  // Merge results from all files
+  const events: CodexUsageEvent[] = [];
+  const dailyActivity = new Map<string, number>();
+  const projects = new Set<string>();
+  let totalMessages = 0;
+  let earliestSessionDate: Date | null = null;
+
+  for (const result of fileResults) {
+    // Merge events
+    events.push(...result.events);
+    
+    // Merge daily activity
+    for (const [date, count] of result.dailyMessages) {
+      dailyActivity.set(date, (dailyActivity.get(date) || 0) + count);
+    }
+    
+    // Merge messages count
+    totalMessages += result.messageCount;
+    
+    // Merge projects
+    for (const project of result.projects) {
+      projects.add(project);
+    }
+    
+    // Track earliest date
+    if (result.earliestDate) {
+      if (!earliestSessionDate || result.earliestDate < earliestSessionDate) {
+        earliestSessionDate = result.earliestDate;
+      }
     }
   }
 
