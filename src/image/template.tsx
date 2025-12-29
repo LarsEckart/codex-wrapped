@@ -203,8 +203,8 @@ const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 // Reorder indices from Sun=0 based to Mon=0 based
 const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const BAR_HEIGHT = 100;
-const BAR_WIDTH = 56;
-const BAR_GAP = 12;
+const BAR_MAX_WIDTH = 40;
+const BAR_GAP = 8;
 
 const HERO_STAT_CONTENT_HEIGHT = BAR_HEIGHT + spacing[2] + 50;
 
@@ -282,12 +282,22 @@ function WeeklyBarChart({ weekdayActivity }: { weekdayActivity: WeekdayActivity 
             <div
               key={i}
               style={{
-                width: BAR_WIDTH,
-                height: barHeight,
-                backgroundColor: isHighlighted ? colors.accent.primary : colors.streak.level4,
-                borderRadius: 4,
+                flex: 1,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "flex-end",
               }}
-            />
+            >
+              <div
+                style={{
+                  width: "100%",
+                  maxWidth: BAR_MAX_WIDTH,
+                  height: barHeight,
+                  backgroundColor: isHighlighted ? colors.accent.primary : colors.streak.level4,
+                  borderRadius: 4,
+                }}
+              />
+            </div>
           );
         })}
       </div>
@@ -305,7 +315,7 @@ function WeeklyBarChart({ weekdayActivity }: { weekdayActivity: WeekdayActivity 
             <div
               key={i}
               style={{
-                width: BAR_WIDTH,
+                flex: 1,
                 display: "flex",
                 justifyContent: "center",
                 fontSize: typography.size.sm,
