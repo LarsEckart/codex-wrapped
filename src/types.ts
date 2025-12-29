@@ -89,10 +89,6 @@ export interface CodexStats {
   totalReasoningTokens: number;
   totalTokens: number;
 
-  // Cost (if available)
-  totalCost: number;
-  hasUsageCost: boolean;
-
   // Models (sorted by usage)
   topModels: ModelStats[];
 

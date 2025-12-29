@@ -94,7 +94,6 @@ async function main() {
     stats.totalReasoningTokens > 0 && `Reasoning:     ${formatNumber(stats.totalReasoningTokens)}`,
     `Projects:      ${formatNumber(stats.totalProjects)}`,
     `Streak:        ${stats.maxStreak} days`,
-    stats.hasUsageCost && `Usage Cost:    ${stats.totalCost.toFixed(2)}$`,
     stats.mostActiveDay && `Most Active:   ${stats.mostActiveDay.formattedDate}`,
   ].filter(Boolean);
 

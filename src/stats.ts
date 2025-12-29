@@ -1,7 +1,6 @@
 import type { CodexStats, ModelStats, ProviderStats, WeekdayActivity } from "./types";
 import { collectCodexUsageData, getCodexFirstPromptTimestamp, type CodexUsageEvent } from "./collector";
 import { fetchModelsData, getModelDisplayName, getModelProvider, getProviderDisplayName } from "./models";
-import { calculateCostUSD, getModelPricing } from "./pricing";
 
 type ModelUsageTotals = {
   inputTokens: number;
@@ -104,8 +103,6 @@ export async function calculateStats(year: number): Promise<CodexStats> {
     firstSessionDate = historyDate;
   }
   const daysSinceFirstSession = Math.floor((Date.now() - firstSessionDate.getTime()) / (1000 * 60 * 60 * 24));
-  const totalCost = await calculateUsageCost(modelUsageTotals);
-
   return {
     year,
     firstSessionDate,
@@ -118,8 +115,6 @@ export async function calculateStats(year: number): Promise<CodexStats> {
     totalOutputTokens,
     totalReasoningTokens,
     totalTokens,
-    totalCost,
-    hasUsageCost: totalCost > 0,
     topModels,
     topProviders,
     maxStreak,
@@ -176,39 +171,6 @@ function getOrCreateModelUsage(map: Map<string, ModelUsageTotals>, modelId: stri
   };
   map.set(modelId, fresh);
   return fresh;
-}
-
-async function calculateUsageCost(modelUsageTotals: Map<string, ModelUsageTotals>): Promise<number> {
-  let totalCost = 0;
-
-  for (const [modelId, usage] of modelUsageTotals.entries()) {
-    if (
-      usage.inputTokens === 0 &&
-      usage.cachedInputTokens === 0 &&
-      usage.outputTokens === 0 &&
-      usage.reasoningTokens === 0
-    ) {
-      continue;
-    }
-
-    const pricing = await getModelPricing(modelId);
-    if (!pricing) continue;
-
-    const cost = calculateCostUSD(
-      {
-        inputTokens: usage.inputTokens,
-        cachedInputTokens: usage.cachedInputTokens,
-        outputTokens: usage.outputTokens,
-      },
-      pricing
-    );
-
-    if (Number.isFinite(cost)) {
-      totalCost += cost;
-    }
-  }
-
-  return totalCost;
 }
 
 function calculateStreaks(
