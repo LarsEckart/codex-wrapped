@@ -202,8 +202,7 @@ async function main() {
 
     if (!packageName) {
       console.error(`codex-wrapped: Unsupported platform: ${os.platform()}-${os.arch()}`);
-      console.error("Please download the binary manually from:");
-      console.error("https://github.com/numman-ali/codex-wrapped/releases");
+      console.error("Please download the binary manually from the release artifacts.");
       process.exit(0); // Exit gracefully
     }
 
@@ -228,8 +227,7 @@ async function main() {
 
       console.error(`codex-wrapped: Could not find binary for ${packageName}`);
       console.error("The optional dependency may have failed to install.");
-      console.error("Please download the binary manually from:");
-      console.error("https://github.com/numman-ali/codex-wrapped/releases");
+      console.error("Please download the binary manually from the release artifacts.");
       process.exit(0);
     }
 

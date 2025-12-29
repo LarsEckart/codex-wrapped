@@ -6,14 +6,6 @@
     "email": "numman.ali@gmail.com"
   },
   "description": "Generate a personalized Spotify Wrapped-style summary of your Codex usage",
-  "homepage": "https://github.com/numman-ali/codex-wrapped",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/numman-ali/codex-wrapped.git"
-  },
-  "bugs": {
-    "url": "https://github.com/numman-ali/codex-wrapped/issues"
-  },
   "keywords": [
     "codex",
     "openai",
@@ -29,8 +21,6 @@
     "start": "bun src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "tsgo --noEmit && bun run scripts/build.ts",
-    "publish": "bun run scripts/publish.ts",
-    "release": "semantic-release",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -41,13 +31,10 @@
     "xdg-basedir": "^5.1.0"
   },
   "devDependencies": {
-    "@semantic-release/exec": "^7.1.0",
-    "@semantic-release/git": "^10.0.1",
     "@types/bun": "latest",
     "@types/react": "^19.2.7",
     "@typescript/native-preview": "^7.0.0-dev.20251223.1",
     "bunup": "^0.16.10",
-    "semantic-release": "^25.0.2",
     "typescript": "^5.0.0"
   }
 }

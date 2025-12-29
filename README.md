@@ -4,15 +4,6 @@
 
 **Your year in code, beautifully visualized.**
 
-<p>
-  <strong>Credit:</strong> Built on top of
-  <a href="https://github.com/moddi3/opencode-wrapped">opencode-wrapped</a>
-  by moddi3 (<a href="https://x.com/moddi3io">@moddi3io</a>).
-</p>
-<p>
-  Found this useful? Follow <a href="https://x.com/nummanali">@nummanali</a> for more AI tooling!
-</p>
-
 Generate a personalized "Spotify Wrapped"-style summary of your [Codex](https://openai.com/codex) usage.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -108,10 +99,6 @@ bun run dev
 bun run build
 ```
 
-### Releasing
-
-Releases are automated via [semantic-release](https://semantic-release.gitbook.io). Merging PRs with [conventional commits](https://www.conventionalcommits.org) to `main` triggers a release.
-
 ## Tech Stack
 
 - **Runtime**: [Bun](https://bun.sh)
@@ -132,7 +119,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 <div align="center">
 
 Built for the Codex community
-
-Credit: <a href="https://github.com/ryoppippi/ccusage">ccusage</a>
 
 </div>
