@@ -6,11 +6,12 @@ import { parseArgs } from "node:util";
 
 import { checkCodexDataExists } from "./collector";
 import { calculateStats } from "./stats";
-import { generateImage } from "./image/generator";
+import { generateDisplayImage, generateFullImage } from "./image/generator";
 import { displayInTerminal, getTerminalName } from "./terminal/display";
 import { formatNumber } from "./utils/format";
 
 const VERSION = "1.0.0";
+const PROFILE = process.env.CODEX_WRAPPED_PROFILE === "1";
 
 function printHelp() {
   console.log(`
@@ -99,21 +100,31 @@ async function main() {
 
   p.note(summaryLines.join("\n"), `Your ${requestedYear} in Codex`);
 
-  // Generate image
-  spinner.start("Generating your wrapped image...");
+  // Generate display image first (faster feedback)
+  spinner.start("Generating your wrapped preview...");
 
-  let image: { fullSize: Buffer; displaySize: Buffer };
+  let displayImage: Buffer;
   try {
-    image = await generateImage(stats);
+    const genStart = PROFILE ? performance.now() : 0;
+    displayImage = await generateDisplayImage(stats);
+    if (PROFILE) {
+      const genMs = performance.now() - genStart;
+      console.log(`profile: generateDisplayImage ${genMs.toFixed(1)}ms`);
+    }
   } catch (error) {
-    spinner.stop("Failed to generate image");
+    spinner.stop("Failed to generate preview");
     p.cancel(`Error generating image: ${error}`);
     process.exit(1);
   }
 
-  spinner.stop("Image generated!");
+  spinner.stop("Preview generated!");
 
-  const displayed = await displayInTerminal(image.displaySize);
+  const displayStart = PROFILE ? performance.now() : 0;
+  const displayed = await displayInTerminal(displayImage);
+  if (PROFILE) {
+    const displayMs = performance.now() - displayStart;
+    console.log(`profile: displayInTerminal ${displayMs.toFixed(1)}ms`);
+  }
   if (!displayed) {
     p.log.info(`Terminal (${getTerminalName()}) doesn't support inline images`);
   }
@@ -133,9 +144,18 @@ async function main() {
 
   if (shouldSave) {
     try {
-      await Bun.write(defaultPath, image.fullSize);
+      spinner.start("Generating full-size image...");
+      const fullStart = PROFILE ? performance.now() : 0;
+      const fullImage = await generateFullImage(stats);
+      if (PROFILE) {
+        const fullMs = performance.now() - fullStart;
+        console.log(`profile: generateFullImage ${fullMs.toFixed(1)}ms`);
+      }
+      await Bun.write(defaultPath, fullImage);
+      spinner.stop("Image saved!");
       p.log.success(`Saved to ${defaultPath}`);
     } catch (error) {
+      spinner.stop("Failed to save image");
       p.log.error(`Failed to save: ${error}`);
     }
   }
