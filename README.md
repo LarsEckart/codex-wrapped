@@ -37,12 +37,14 @@ codex-wrapped
 
 ## Usage Options
 
-| Option          | Description                          |
-| --------------- | ------------------------------------ |
-| `--year, -y`    | Generate wrapped for a specific year |
-| `--no-preview`  | Skip inline image preview            |
-| `--help, -h`    | Show help message                    |
-| `--version, -v` | Show version number                  |
+| Option          | Description                                               |
+| --------------- | --------------------------------------------------------- |
+| `--year`        | Generate wrapped for a specific year                      |
+| `--yes, -y`     | Auto-accept the save prompt                               |
+| `--output, -o`  | Output path for saved image (or pass a single positional path)  |
+| `--no-preview`  | Skip inline image preview                                 |
+| `--help, -h`    | Show help message                                         |
+| `--version, -v` | Show version number                                       |
 
 ## Features
 

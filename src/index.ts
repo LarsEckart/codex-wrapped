@@ -24,6 +24,8 @@ USAGE:
 
 OPTIONS:
   --year <YYYY>    Generate wrapped for a specific year (default: current year)
+  --yes, -y        Auto-accept the save prompt
+  --output, -o     Output path for saved image (or pass a single positional path)
   --no-preview     Skip inline image preview
   --help, -h       Show this help message
   --version, -v    Show version number
@@ -31,6 +33,7 @@ OPTIONS:
 EXAMPLES:
   codex-wrapped              # Generate current year wrapped
   codex-wrapped --year 2025  # Generate 2025 wrapped
+  codex-wrapped -y /tmp/codex-wrapped.png  # Auto-save to a specific path
 `);
 }
 
@@ -130,10 +133,17 @@ async function main() {
   const filename = `codex-wrapped-${requestedYear}.png`;
   const defaultPath = join(process.env.HOME || "~", filename);
 
-  const shouldSave = await p.confirm({
-    message: `Save image to ~/${filename}?`,
-    initialValue: true,
-  });
+  const targetPath = values.outputPath ?? defaultPath;
+  const shouldAutoSave = values.autoSave;
+  const shouldSave = shouldAutoSave
+    ? true
+    : await p.confirm({
+        message:
+          values.outputPath && values.outputPath !== defaultPath
+            ? `Save image to ${targetPath}?`
+            : `Save image to ~/${filename}?`,
+        initialValue: true,
+      });
 
   if (p.isCancel(shouldSave)) {
     p.outro("Cancelled");
@@ -149,9 +159,9 @@ async function main() {
         const fullMs = performance.now() - fullStart;
         console.log(`profile: generateFullImage ${fullMs.toFixed(1)}ms`);
       }
-      await writeFile(defaultPath, fullImage);
+      await writeFile(targetPath, fullImage);
       spinner.stop("Image saved!");
-      p.log.success(`Saved to ${defaultPath}`);
+      p.log.success(`Saved to ${targetPath}`);
     } catch (error) {
       spinner.stop("Failed to save image");
       p.log.error(`Failed to save: ${error}`);
@@ -167,10 +177,12 @@ type ParsedArgs = {
   help: boolean;
   version: boolean;
   noPreview: boolean;
+  autoSave: boolean;
+  outputPath?: string;
 };
 
 function parseCliArgs(args: string[]): ParsedArgs {
-  const result: ParsedArgs = { help: false, version: false, noPreview: false };
+  const result: ParsedArgs = { help: false, version: false, noPreview: false, autoSave: false };
 
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
@@ -190,7 +202,23 @@ function parseCliArgs(args: string[]): ParsedArgs {
       continue;
     }
 
-    if (arg === "--year" || arg === "-y") {
+    if (arg === "--yes" || arg === "-y") {
+      result.autoSave = true;
+      continue;
+    }
+
+    if (arg === "--output" || arg === "-o") {
+      const value = args[i + 1];
+      if (!value || value.startsWith("-")) {
+        console.error("Error: --output requires a value");
+        process.exit(1);
+      }
+      result.outputPath = value;
+      i += 1;
+      continue;
+    }
+
+    if (arg === "--year") {
       const value = args[i + 1];
       if (!value || value.startsWith("-")) {
         console.error("Error: --year requires a value");
@@ -208,6 +236,15 @@ function parseCliArgs(args: string[]): ParsedArgs {
         process.exit(1);
       }
       result.year = value;
+      continue;
+    }
+
+    if (!arg.startsWith("-")) {
+      if (result.outputPath) {
+        console.error("Error: Only one output path may be provided");
+        process.exit(1);
+      }
+      result.outputPath = arg;
       continue;
     }
 
