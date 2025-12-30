@@ -20,7 +20,7 @@ const require = createRequire(import.meta.url);
 const resvgWasmPath = require.resolve("@resvg/resvg-wasm/index_bg.wasm");
 
 function toArrayBuffer(buffer: Buffer): ArrayBuffer {
-  return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+  return Uint8Array.from(buffer).buffer;
 }
 
 async function renderSvg(stats: CodexStats): Promise<string> {

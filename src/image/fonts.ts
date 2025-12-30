@@ -15,7 +15,7 @@ const boldFontPath = fileURLToPath(
 );
 
 function toArrayBuffer(buffer: Buffer): ArrayBuffer {
-  return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+  return Uint8Array.from(buffer).buffer;
 }
 
 export async function loadFonts(): Promise<Font[]> {

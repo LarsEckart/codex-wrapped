@@ -3,7 +3,6 @@
 import * as p from "@clack/prompts";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { parseArgs } from "node:util";
 
 import { checkCodexDataExists } from "./collector.js";
 import { calculateStats } from "./stats.js";
@@ -36,16 +35,7 @@ EXAMPLES:
 
 async function main() {
   // Parse command line arguments
-  const { values } = parseArgs({
-    args: process.argv.slice(2),
-    options: {
-      year: { type: "string", short: "y" },
-      help: { type: "boolean", short: "h" },
-      version: { type: "boolean", short: "v" },
-    },
-    strict: true,
-    allowPositionals: false,
-  });
+  const values = parseCliArgs(process.argv.slice(2));
 
   if (values.help) {
     printHelp();
@@ -163,6 +153,56 @@ async function main() {
 
   p.outro("Done!");
   process.exit(0);
+}
+
+type ParsedArgs = {
+  year?: string;
+  help: boolean;
+  version: boolean;
+};
+
+function parseCliArgs(args: string[]): ParsedArgs {
+  const result: ParsedArgs = { help: false, version: false };
+
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i];
+
+    if (arg === "--help" || arg === "-h") {
+      result.help = true;
+      continue;
+    }
+
+    if (arg === "--version" || arg === "-v") {
+      result.version = true;
+      continue;
+    }
+
+    if (arg === "--year" || arg === "-y") {
+      const value = args[i + 1];
+      if (!value || value.startsWith("-")) {
+        console.error("Error: --year requires a value");
+        process.exit(1);
+      }
+      result.year = value;
+      i += 1;
+      continue;
+    }
+
+    if (arg.startsWith("--year=")) {
+      const value = arg.split("=").slice(1).join("=");
+      if (!value) {
+        console.error("Error: --year requires a value");
+        process.exit(1);
+      }
+      result.year = value;
+      continue;
+    }
+
+    console.error(`Error: Unknown option "${arg}"`);
+    process.exit(1);
+  }
+
+  return result;
 }
 
 main().catch((error) => {
