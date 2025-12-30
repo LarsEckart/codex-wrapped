@@ -161,6 +161,10 @@ export function WrappedTemplate({ stats }: { stats: CodexStats }) {
             label="Messages"
             value={formatNumberFull(stats.totalMessages)}
           />
+          <StatBox
+            label="Tokens"
+            value={formatNumberFull(stats.totalTokens)}
+          />
         </div>
       </div>
     </div>
