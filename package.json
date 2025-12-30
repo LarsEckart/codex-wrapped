@@ -15,12 +15,19 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "codex-wrapped": "./bin/codex-wrapped"
+    "codex-wrapped": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "assets",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "start": "bun src/index.ts",
-    "dev": "bun run --watch src/index.ts",
-    "build": "tsgo --noEmit && bun run scripts/build.ts",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -31,10 +38,9 @@
     "xdg-basedir": "^5.1.0"
   },
   "devDependencies": {
-    "@types/bun": "latest",
+    "@types/node": "^22.10.2",
     "@types/react": "^19.2.7",
-    "@typescript/native-preview": "^7.0.0-dev.20251223.1",
-    "bunup": "^0.16.10",
+    "tsx": "^4.19.2",
     "typescript": "^5.0.0"
   }
 }

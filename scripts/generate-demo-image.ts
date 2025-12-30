@@ -1,8 +1,8 @@
-#!/usr/bin/env bun
-
-import { generateImage } from "../src/image/generator";
-import type { CodexStats } from "../src/types";
-import { join } from "node:path";
+import { generateImage } from "../src/image/generator.js";
+import type { CodexStats } from "../src/types.js";
+import { writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Generate realistic sample data
 function generateDemoStats(): CodexStats {
@@ -111,8 +111,9 @@ async function main() {
   const stats = generateDemoStats();
   const image = await generateImage(stats);
 
-  const outputPath = join(import.meta.dir, "..", "assets", "images", "demo-wrapped.png");
-  await Bun.write(outputPath, image.fullSize);
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const outputPath = join(__dirname, "..", "assets", "images", "demo-wrapped.png");
+  await writeFile(outputPath, image.fullSize);
 
   console.log(`Demo image saved to: ${outputPath}`);
 }

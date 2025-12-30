@@ -1,10 +1,11 @@
 import satori from "satori";
 import { Resvg, initWasm } from "@resvg/resvg-wasm";
-import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
-import { WrappedTemplate } from "./template";
-import type { CodexStats } from "../types";
-import { loadFonts } from "./fonts";
-import { layout } from "./design-tokens";
+import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { WrappedTemplate } from "./template.js";
+import type { CodexStats } from "../types.js";
+import { loadFonts } from "./fonts.js";
+import { layout } from "./design-tokens.js";
 
 export interface GeneratedImage {
   /** Full resolution PNG buffer for saving/clipboard */
@@ -15,11 +16,20 @@ export interface GeneratedImage {
 
 const PROFILE = process.env.CODEX_WRAPPED_PROFILE === "1";
 let wasmInit: Promise<void> | null = null;
+const require = createRequire(import.meta.url);
+const resvgWasmPath = require.resolve("@resvg/resvg-wasm/index_bg.wasm");
+
+function toArrayBuffer(buffer: Buffer): ArrayBuffer {
+  return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+}
 
 async function renderSvg(stats: CodexStats): Promise<string> {
   const t0 = PROFILE ? performance.now() : 0;
   if (!wasmInit) {
-    wasmInit = initWasm(Bun.file(resvgWasm).arrayBuffer());
+    wasmInit = (async () => {
+      const wasmBuffer = await readFile(resvgWasmPath);
+      await initWasm(toArrayBuffer(wasmBuffer));
+    })();
   }
   await wasmInit;
   if (PROFILE) {

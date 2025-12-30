@@ -1,18 +1,24 @@
-import type { CodexStats, WeekdayActivity } from "../types";
+import type { CodexStats, WeekdayActivity } from "../types.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import {
   formatNumberFull,
   formatDate,
   formatDateNoYear,
-} from "../utils/format";
-import { ActivityHeatmap } from "./heatmap";
+} from "../utils/format.js";
+import { ActivityHeatmap } from "./heatmap.js";
 import {
   colors,
   typography,
   spacing,
   layout,
   components,
-} from "./design-tokens";
-import logoBase64 from "../../assets/images/codex-logo.base64.txt" with { type: "text" };
+} from "./design-tokens.js";
+
+const logoBase64Path = fileURLToPath(
+  new URL("../../assets/images/codex-logo.base64.txt", import.meta.url)
+);
+const logoBase64 = readFileSync(logoBase64Path, "utf8");
 
 const CODEX_LOGO_DATA_URL = `data:image/png;base64,${logoBase64.trim()}`;
 

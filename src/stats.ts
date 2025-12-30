@@ -1,6 +1,6 @@
-import type { CodexStats, ModelStats, ProviderStats, WeekdayActivity } from "./types";
-import { collectCodexUsageData, getCodexFirstPromptTimestamp, type CodexUsageEvent } from "./collector";
-import { fetchModelsData, getModelDisplayName, getModelProvider, getProviderDisplayName } from "./models";
+import type { CodexStats, ModelStats, ProviderStats, WeekdayActivity } from "./types.js";
+import { collectCodexUsageData, getCodexFirstPromptTimestamp, type CodexUsageEvent } from "./collector.js";
+import { fetchModelsData, getModelDisplayName, getModelProvider, getProviderDisplayName } from "./models.js";
 
 type ModelUsageTotals = {
   inputTokens: number;

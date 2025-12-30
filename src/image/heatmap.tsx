@@ -1,5 +1,5 @@
-import { generateWeeksForYear, getIntensityLevel } from "../utils/dates";
-import { colors, typography, spacing, components, HEATMAP_COLORS, STREAK_COLORS } from "./design-tokens";
+import { generateWeeksForYear, getIntensityLevel } from "../utils/dates.js";
+import { colors, typography, spacing, components, HEATMAP_COLORS, STREAK_COLORS } from "./design-tokens.js";
 
 interface HeatmapProps {
   dailyActivity: Map<string, number>;

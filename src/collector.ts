@@ -1,6 +1,6 @@
 // Data collector - reads Codex CLI storage and returns raw data
 
-import { readdir, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import os from "node:os";
 
@@ -91,9 +91,7 @@ export async function listCodexSessionFiles(year: number): Promise<string[]> {
 
 export async function getCodexFirstPromptTimestamp(): Promise<number | null> {
   try {
-    // Use Bun's native file API for faster reading
-    const file = Bun.file(CODEX_HISTORY_PATH);
-    const raw = await file.text();
+    const raw = await readFile(CODEX_HISTORY_PATH, "utf8");
     let minTs: number | null = null;
     for (const line of raw.split("\n")) {
       if (!line.trim()) continue;
@@ -122,7 +120,6 @@ interface FileProcessResult {
   earliestDate: Date | null;
 }
 
-// Process a single session file using Bun's native file API
 async function processSessionFile(filePath: string): Promise<FileProcessResult> {
   const events: CodexUsageEvent[] = [];
   const dailyMessages = new Map<string, number>();
@@ -134,9 +131,7 @@ async function processSessionFile(filePath: string): Promise<FileProcessResult> 
   let currentModelIsFallback = false;
 
   try {
-    // Use Bun's native file API - much faster than Node's createReadStream
-    const file = Bun.file(filePath);
-    const content = await file.text();
+    const content = await readFile(filePath, "utf8");
     const lines = content.split("\n");
 
     for (const line of lines) {

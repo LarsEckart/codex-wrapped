@@ -1,14 +1,15 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 import * as p from "@clack/prompts";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 
-import { checkCodexDataExists } from "./collector";
-import { calculateStats } from "./stats";
-import { generateDisplayImage, generateFullImage } from "./image/generator";
-import { displayInTerminal, getTerminalName } from "./terminal/display";
-import { formatNumber } from "./utils/format";
+import { checkCodexDataExists } from "./collector.js";
+import { calculateStats } from "./stats.js";
+import { generateDisplayImage, generateFullImage } from "./image/generator.js";
+import { displayInTerminal, getTerminalName } from "./terminal/display.js";
+import { formatNumber } from "./utils/format.js";
 
 const VERSION = "1.0.0";
 const PROFILE = process.env.CODEX_WRAPPED_PROFILE === "1";
@@ -151,7 +152,7 @@ async function main() {
         const fullMs = performance.now() - fullStart;
         console.log(`profile: generateFullImage ${fullMs.toFixed(1)}ms`);
       }
-      await Bun.write(defaultPath, fullImage);
+      await writeFile(defaultPath, fullImage);
       spinner.stop("Image saved!");
       p.log.success(`Saved to ${defaultPath}`);
     } catch (error) {

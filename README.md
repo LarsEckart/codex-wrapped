@@ -7,8 +7,6 @@
 Generate a personalized "Spotify Wrapped"-style summary of your [Codex](https://openai.com/codex) usage.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Bun](https://img.shields.io/badge/Bun-%23000000.svg?logo=bun&logoColor=white)](https://bun.sh)
-
 <img src="./assets/images/demo-wrapped.png" alt="Codex Wrapped Example" width="600" />
 
 </div>
@@ -22,13 +20,13 @@ Generate a personalized "Spotify Wrapped"-style summary of your [Codex](https://
 Run directly without installing:
 
 ```bash
-npx codex-wrapped # or bunx, or yarn/pnpm dlx
+npx codex-wrapped # or yarn/pnpm dlx
 ```
 
 ### Global Install
 
 ```bash
-npm install -g codex-wrapped # or bun/yarn/pnpm
+npm install -g codex-wrapped # or yarn/pnpm
 ```
 
 Then run anywhere:
@@ -89,19 +87,19 @@ No data is sent anywhere. Everything is processed locally.
 
 ```bash
 # Run in development mode with hot reload
-bun run dev
+npm run dev
 ```
 
 ### Production Build
 
 ```bash
-# Build for all platforms
-bun run build
+# Build for production
+npm run build
 ```
 
 ## Tech Stack
 
-- **Runtime**: [Bun](https://bun.sh)
+- **Runtime**: Node.js
 - **Image Generation**: [Satori](https://github.com/vercel/satori) + [Resvg](https://github.com/nicolo-ribaudo/resvg-js)
 - **CLI UI**: [@clack/prompts](https://github.com/natemoo-re/clack)
 - **Font**: IBM Plex Mono
