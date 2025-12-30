@@ -68,6 +68,8 @@ The wrapped image displays natively in terminals that support inline images:
 Cmder/ConEmu runs on Windows and does not support inline images, so the preview is skipped there by default.
 To force a preview attempt, set `CODEX_WRAPPED_FORCE_PREVIEW=1`.
 
+If image rendering fails on your system, you can hide the logo with `CODEX_WRAPPED_NO_LOGO=1`.
+
 ## Output
 
 The tool generates:

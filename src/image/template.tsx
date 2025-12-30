@@ -18,9 +18,10 @@ import {
 const logoBase64Path = fileURLToPath(
   new URL("../../assets/images/codex-logo.base64.txt", import.meta.url)
 );
-const logoBase64 = readFileSync(logoBase64Path, "utf8");
+const logoBase64 = readFileSync(logoBase64Path, "utf8").replace(/\s+/g, "");
 
-const CODEX_LOGO_DATA_URL = `data:image/png;base64,${logoBase64.trim()}`;
+const CODEX_LOGO_DATA_URL = `data:image/png;base64,${logoBase64}`;
+const SHOW_LOGO = process.env.CODEX_WRAPPED_NO_LOGO !== "1";
 
 export function WrappedTemplate({ stats }: { stats: CodexStats }) {
   return (
@@ -184,13 +185,16 @@ function Header({ year }: { year: number }) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: spacing[4] }}>
-          <img
-            src={CODEX_LOGO_DATA_URL}
-            height={72}
-            style={{
-              objectFit: "contain",
-            }}
-          />
+          {SHOW_LOGO && (
+            <img
+              src={CODEX_LOGO_DATA_URL}
+              width={72}
+              height={72}
+              style={{
+                objectFit: "contain",
+              }}
+            />
+          )}
           <span
             style={{
               fontSize: typography.size["6xl"],
