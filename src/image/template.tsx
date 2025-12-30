@@ -256,6 +256,7 @@ const BAR_MAX_WIDTH = 40;
 const BAR_GAP = 8;
 
 const HERO_STAT_CONTENT_HEIGHT = BAR_HEIGHT + spacing[2] + 50;
+const STAT_BOX_MIN_HEIGHT = typography.size["2xl"] + spacing[4] * 2;
 
 function HeroStatItem({
   label,
@@ -581,6 +582,7 @@ function StatBox({ label, value }: StatBoxProps) {
         paddingRight: spacing[6],
         gap: spacing[4],
         flex: 1,
+        minHeight: STAT_BOX_MIN_HEIGHT,
         alignItems: "center",
         justifyContent: "space-between",
         borderRadius: components.statBox.borderRadius,
