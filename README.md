@@ -15,24 +15,13 @@ Generate a personalized "Spotify Wrapped"-style summary of your [Codex](https://
 
 ## Installation
 
-### Quick Start
+This repo is meant to be run from source. Please do **not** install the
+`codex-wrapped` package from the npm registry (it's a different package).
 
-Run directly without installing:
-
-```bash
-npx codex-wrapped # or yarn/pnpm dlx
-```
-
-### Global Install
+From the repo root, run:
 
 ```bash
-npm install -g codex-wrapped # or yarn/pnpm
-```
-
-Then run anywhere:
-
-```bash
-codex-wrapped
+npm install && npm start
 ```
 
 ## Usage Options
