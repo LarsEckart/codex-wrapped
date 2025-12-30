@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { checkCodexDataExists } from "./collector.js";
 import { calculateStats } from "./stats.js";
 import { generateDisplayImage, generateFullImage } from "./image/generator.js";
-import { displayInTerminal, getTerminalName } from "./terminal/display.js";
+import { displayInTerminal, getTerminalName, shouldSkipInlinePreview } from "./terminal/display.js";
 import { formatNumber } from "./utils/format.js";
 
 const VERSION = "1.0.0";
@@ -24,6 +24,7 @@ USAGE:
 
 OPTIONS:
   --year <YYYY>    Generate wrapped for a specific year (default: current year)
+  --no-preview     Skip inline image preview
   --help, -h       Show this help message
   --version, -v    Show version number
 
@@ -50,6 +51,8 @@ async function main() {
   p.intro("codex wrapped");
 
   const requestedYear = values.year ? parseInt(values.year, 10) : new Date().getFullYear();
+  const skipPreview =
+    values.noPreview || process.env.CODEX_WRAPPED_NO_PREVIEW === "1" || shouldSkipInlinePreview();
 
   const dataExists = await checkCodexDataExists();
   if (!dataExists) {
@@ -91,33 +94,37 @@ async function main() {
 
   p.note(summaryLines.join("\n"), `Your ${requestedYear} in Codex`);
 
-  // Generate display image first (faster feedback)
-  spinner.start("Generating your wrapped preview...");
+  if (!skipPreview) {
+    // Generate display image first (faster feedback)
+    spinner.start("Generating your wrapped preview...");
 
-  let displayImage: Buffer;
-  try {
-    const genStart = PROFILE ? performance.now() : 0;
-    displayImage = await generateDisplayImage(stats);
-    if (PROFILE) {
-      const genMs = performance.now() - genStart;
-      console.log(`profile: generateDisplayImage ${genMs.toFixed(1)}ms`);
+    let displayImage: Buffer;
+    try {
+      const genStart = PROFILE ? performance.now() : 0;
+      displayImage = await generateDisplayImage(stats);
+      if (PROFILE) {
+        const genMs = performance.now() - genStart;
+        console.log(`profile: generateDisplayImage ${genMs.toFixed(1)}ms`);
+      }
+    } catch (error) {
+      spinner.stop("Failed to generate preview");
+      p.cancel(`Error generating image: ${error}`);
+      process.exit(1);
     }
-  } catch (error) {
-    spinner.stop("Failed to generate preview");
-    p.cancel(`Error generating image: ${error}`);
-    process.exit(1);
-  }
 
-  spinner.stop("Preview generated!");
+    spinner.stop("Preview generated!");
 
-  const displayStart = PROFILE ? performance.now() : 0;
-  const displayed = await displayInTerminal(displayImage);
-  if (PROFILE) {
-    const displayMs = performance.now() - displayStart;
-    console.log(`profile: displayInTerminal ${displayMs.toFixed(1)}ms`);
-  }
-  if (!displayed) {
-    p.log.info(`Terminal (${getTerminalName()}) doesn't support inline images`);
+    const displayStart = PROFILE ? performance.now() : 0;
+    const displayed = await displayInTerminal(displayImage);
+    if (PROFILE) {
+      const displayMs = performance.now() - displayStart;
+      console.log(`profile: displayInTerminal ${displayMs.toFixed(1)}ms`);
+    }
+    if (!displayed) {
+      p.log.info(`Terminal (${getTerminalName()}) doesn't support inline images`);
+    }
+  } else {
+    p.log.info("Skipping inline preview");
   }
 
   const filename = `codex-wrapped-${requestedYear}.png`;
@@ -159,10 +166,11 @@ type ParsedArgs = {
   year?: string;
   help: boolean;
   version: boolean;
+  noPreview: boolean;
 };
 
 function parseCliArgs(args: string[]): ParsedArgs {
-  const result: ParsedArgs = { help: false, version: false };
+  const result: ParsedArgs = { help: false, version: false, noPreview: false };
 
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
@@ -174,6 +182,11 @@ function parseCliArgs(args: string[]): ParsedArgs {
 
     if (arg === "--version" || arg === "-v") {
       result.version = true;
+      continue;
+    }
+
+    if (arg === "--no-preview") {
+      result.noPreview = true;
       continue;
     }
 

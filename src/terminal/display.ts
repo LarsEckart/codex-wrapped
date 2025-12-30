@@ -1,6 +1,15 @@
 // Custom terminal image display with Ghostty, Kitty, iTerm2, and fallback support
 
-export type TerminalType = "ghostty" | "kitty" | "iterm" | "wezterm" | "konsole" | "vscode" | "warp" | "standard";
+export type TerminalType =
+  | "ghostty"
+  | "kitty"
+  | "iterm"
+  | "wezterm"
+  | "konsole"
+  | "vscode"
+  | "warp"
+  | "cmder"
+  | "standard";
 
 export interface TerminalInfo {
   type: TerminalType;
@@ -15,8 +24,12 @@ export function detectTerminal(): TerminalInfo {
   let supportsKittyProtocol = false;
   let supportsITerm2Protocol = false;
 
+  // Cmder/ConEmu (Windows)
+  if (env.CMDER_ROOT || env.ConEmuPID || env.ConEmuANSI || env.TERM_PROGRAM === "ConEmu") {
+    type = "cmder";
+  }
   // Ghostty - supports Kitty graphics protocol
-  if (env.TERM === "xterm-ghostty") {
+  else if (env.TERM === "xterm-ghostty") {
     type = "ghostty";
     supportsKittyProtocol = true;
   }
@@ -118,4 +131,12 @@ export async function displayInTerminal(pngBuffer: Buffer): Promise<boolean> {
 export function getTerminalName(): string {
   const terminal = detectTerminal();
   return terminal.type;
+}
+
+export function shouldSkipInlinePreview(): boolean {
+  if (process.env.CODEX_WRAPPED_FORCE_PREVIEW === "1") {
+    return false;
+  }
+  const terminal = detectTerminal();
+  return terminal.type === "cmder";
 }

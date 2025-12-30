@@ -40,6 +40,7 @@ codex-wrapped
 | Option          | Description                          |
 | --------------- | ------------------------------------ |
 | `--year, -y`    | Generate wrapped for a specific year |
+| `--no-preview`  | Skip inline image preview            |
 | `--help, -h`    | Show help message                    |
 | `--version, -v` | Show version number                  |
 
@@ -63,6 +64,9 @@ The wrapped image displays natively in terminals that support inline images:
 | [iTerm2](https://iterm2.com)               | iTerm2 Inline  | Full support                |
 | [Konsole](https://konsole.kde.org)         | Kitty Graphics | Full support                |
 | Other terminals                            | —              | Image saved to file only    |
+
+Cmder/ConEmu runs on Windows and does not support inline images, so the preview is skipped there by default.
+To force a preview attempt, set `CODEX_WRAPPED_FORCE_PREVIEW=1`.
 
 ## Output
 
