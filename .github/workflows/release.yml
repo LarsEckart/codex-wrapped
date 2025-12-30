@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Create release directory
+        run: |
+          mkdir -p release/codex-wrapped
+          cp -r dist release/codex-wrapped/
+          cp -r assets release/codex-wrapped/
+          cp package.json package-lock.json README.md LICENSE release/codex-wrapped/
+
+      - name: Create release zip
+        run: |
+          cd release
+          zip -r codex-wrapped-${GITHUB_REF_NAME}.zip codex-wrapped/
+          cd ..
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << 'EOF'
+          ## Installation
+          
+          Download the zip file below and extract it:
+          
+          ```bash
+          unzip codex-wrapped-${GITHUB_REF_NAME}.zip
+          cd codex-wrapped
+          npm install
+          npm start
+          ```
+          
+          ## What's Included
+          
+          - ✅ Pre-built JavaScript (no TypeScript compilation needed)
+          - ✅ All assets and fonts
+          - ✅ Ready to run after `npm install`
+          
+          ## Requirements
+          
+          - Node.js 18+ 
+          - npm
+          
+          ## Features
+          
+          - Sessions, messages, tokens, projects, and streaks
+          - GitHub-style activity heatmap
+          - Top models and providers breakdown
+          - Shareable PNG image
+          - Inline image display support for modern terminals
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/codex-wrapped-${{ github.ref_name }}.zip
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
