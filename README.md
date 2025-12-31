@@ -41,22 +41,19 @@ npm install && npm start
 - GitHub-style activity heatmap
 - Top models and providers breakdown
 - Shareable PNG image
-- Inline image display (Ghostty, Kitty, iTerm2, WezTerm, Konsole)
+- Inline image display (tested in Ghostty)
 
 ## Terminal Support
 
-The wrapped image displays natively in terminals that support inline images:
+The wrapped image displays natively in terminals that support inline images. As of now, it has only been tested in:
 
-| Terminal                                   | Protocol       | Status                      |
-| ------------------------------------------ | -------------- | --------------------------- |
-| [Ghostty](https://ghostty.org)             | Kitty Graphics | Full support                |
-| [Kitty](https://sw.kovidgoyal.net/kitty/)  | Kitty Graphics | Full support                |
-| [WezTerm](https://wezfurlong.org/wezterm/) | Kitty + iTerm2 | Full support                |
-| [iTerm2](https://iterm2.com)               | iTerm2 Inline  | Full support                |
-| [Konsole](https://konsole.kde.org)         | Kitty Graphics | Full support                |
-| Other terminals                            | —              | Image saved to file only    |
+| Terminal                       | Status       |
+| ------------------------------ | ------------ |
+| [Ghostty](https://ghostty.org) | Tested       |
 
-Cmder/ConEmu runs on Windows and does not support inline images, so the preview is skipped there by default.
+Other terminals (including the macOS Terminal app) may work but have not been verified.
+
+Windows terminals have not been tested. Inline preview is best-effort and will be skipped when the terminal does not support inline images.
 To force a preview attempt, set `CODEX_WRAPPED_FORCE_PREVIEW=1`.
 
 If image rendering fails on your system, you can hide the logo with `CODEX_WRAPPED_NO_LOGO=1`.
