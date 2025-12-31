@@ -5,8 +5,6 @@
 **Your year in code, beautifully visualized.**
 
 Generate a personalized "Spotify Wrapped"-style summary of your [Codex](https://openai.com/codex) usage.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 <img src="./assets/images/demo-wrapped.png" alt="Codex Wrapped Example" width="600" />
 
 </div>
@@ -116,6 +114,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 ---
 
 <div align="center">
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Built for the Codex community
 
