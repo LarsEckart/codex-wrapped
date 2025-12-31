@@ -11,6 +11,7 @@ import { displayInTerminal, getTerminalName, shouldSkipInlinePreview } from "./t
 import { formatNumber } from "./utils/format.js";
 
 const VERSION = "1.0.0";
+const FIXED_YEAR = 2025;
 const PROFILE = process.env.CODEX_WRAPPED_PROFILE === "1";
 
 function printHelp() {
@@ -23,7 +24,6 @@ USAGE:
   codex-wrapped [OPTIONS]
 
 OPTIONS:
-  --year <YYYY>    Generate wrapped for a specific year (default: current year)
   --yes, -y        Auto-accept the save prompt
   --output, -o     Output path for saved image (or pass a single positional path)
   --no-preview     Skip inline image preview
@@ -31,8 +31,7 @@ OPTIONS:
   --version, -v    Show version number
 
 EXAMPLES:
-  codex-wrapped              # Generate current year wrapped
-  codex-wrapped --year 2025  # Generate 2025 wrapped
+  codex-wrapped              # Generate 2025 wrapped
   codex-wrapped -y /tmp/codex-wrapped.png  # Auto-save to a specific path
 `);
 }
@@ -53,7 +52,7 @@ async function main() {
 
   p.intro("codex wrapped");
 
-  const requestedYear = values.year ? parseInt(values.year, 10) : new Date().getFullYear();
+  const requestedYear = FIXED_YEAR;
   const skipPreview =
     values.noPreview || process.env.CODEX_WRAPPED_NO_PREVIEW === "1" || shouldSkipInlinePreview();
 
@@ -173,7 +172,6 @@ async function main() {
 }
 
 type ParsedArgs = {
-  year?: string;
   help: boolean;
   version: boolean;
   noPreview: boolean;
@@ -215,27 +213,6 @@ function parseCliArgs(args: string[]): ParsedArgs {
       }
       result.outputPath = value;
       i += 1;
-      continue;
-    }
-
-    if (arg === "--year") {
-      const value = args[i + 1];
-      if (!value || value.startsWith("-")) {
-        console.error("Error: --year requires a value");
-        process.exit(1);
-      }
-      result.year = value;
-      i += 1;
-      continue;
-    }
-
-    if (arg.startsWith("--year=")) {
-      const value = arg.split("=").slice(1).join("=");
-      if (!value) {
-        console.error("Error: --year requires a value");
-        process.exit(1);
-      }
-      result.year = value;
       continue;
     }
 

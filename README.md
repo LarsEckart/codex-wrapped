@@ -28,7 +28,6 @@ npm install && npm start
 
 | Option          | Description                                               |
 | --------------- | --------------------------------------------------------- |
-| `--year`        | Generate wrapped for a specific year                      |
 | `--yes, -y`     | Auto-accept the save prompt                               |
 | `--output, -o`  | Output path for saved image (or pass a single positional path)  |
 | `--no-preview`  | Skip inline image preview                                 |

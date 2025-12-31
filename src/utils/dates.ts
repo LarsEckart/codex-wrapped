@@ -81,4 +81,3 @@ export function getIntensityLevel(count: number, maxCount: number): 0 | 1 | 2 | 
   if (ratio <= 0.8) return 5;
   return 6;
 }
-
