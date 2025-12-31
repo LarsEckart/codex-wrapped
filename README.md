@@ -37,9 +37,11 @@ npm install && npm start
 
 ## Features
 
-- Sessions, messages, tokens, projects, and streaks
-- GitHub-style activity heatmap
-- Top models and providers breakdown
+- Started date + most active day highlights
+- Weekly activity bar chart
+- Year-long activity heatmap with streak highlights
+- Top models list (top 5)
+- Totals: projects, sessions, messages, tokens
 - Shareable PNG image
 - Inline image display (tested in Ghostty)
 
