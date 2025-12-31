@@ -30,13 +30,15 @@ OPTIONS:
   --codex-home     Use a custom Codex data directory (defaults to $CODEX_HOME or ~/.codex)
   --no-preview     Skip inline image preview
   --stats          Print stats as JSON and exit (no images)
+  --stats-full     Print full stats JSON for debugging
   --help, -h       Show this help message
   --version, -v    Show version number
 
 EXAMPLES:
   codex-wrapped              # Generate 2025 wrapped
   codex-wrapped -y /tmp/codex-wrapped.png  # Auto-save to a specific path
-  codex-wrapped --stats      # Print stats as JSON and exit
+  codex-wrapped --stats      # Print minimal stats as JSON and exit
+  codex-wrapped --stats-full # Print full stats JSON for debugging
 `);
 }
 
@@ -77,7 +79,8 @@ async function main() {
       process.exit(1);
     }
 
-    console.log(JSON.stringify(serializeStats(stats), null, 2));
+    const payload = values.statsFull ? serializeStatsFull(stats) : serializeStatsMinimal(stats);
+    console.log(JSON.stringify(payload, null, 2));
     process.exit(0);
   }
 
@@ -211,9 +214,10 @@ type ParsedArgs = {
   outputPath?: string;
   codexHome?: string;
   statsOnly: boolean;
+  statsFull: boolean;
 };
 
-type SerializedStats = {
+type SerializedStatsFull = {
   year: number;
   firstSessionDate: string;
   daysSinceFirstSession: number;
@@ -235,13 +239,29 @@ type SerializedStats = {
   weekdayActivity: CodexStats["weekdayActivity"];
 };
 
-function serializeStats(stats: CodexStats): SerializedStats {
-  const dailyActivity = Array.from(stats.dailyActivity.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+type SerializedStatsMinimal = {
+  year: number;
+  firstSessionDate: string;
+  totalSessions: number;
+  totalMessages: number;
+  totalProjects: number;
+  totalTokens: number;
+  topModels: Array<{ name: string }>;
+  maxStreakDays: string[];
+  dailyActivity: Array<[string, number]>;
+  mostActiveDay: CodexStats["mostActiveDay"];
+  weekdayActivity: CodexStats["weekdayActivity"];
+};
+
+function serializeStatsFull(stats: CodexStats): SerializedStatsFull {
+  const dailyActivity = Array.from(stats.dailyActivity.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  );
   const maxStreakDays = Array.from(stats.maxStreakDays).sort();
 
   return {
     year: stats.year,
-    firstSessionDate: stats.firstSessionDate.toISOString(),
+    firstSessionDate: formatLocalDate(stats.firstSessionDate),
     daysSinceFirstSession: stats.daysSinceFirstSession,
     totalSessions: stats.totalSessions,
     totalMessages: stats.totalMessages,
@@ -262,6 +282,34 @@ function serializeStats(stats: CodexStats): SerializedStats {
   };
 }
 
+function serializeStatsMinimal(stats: CodexStats): SerializedStatsMinimal {
+  const dailyActivity = Array.from(stats.dailyActivity.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  );
+  const maxStreakDays = Array.from(stats.maxStreakDays).sort();
+
+  return {
+    year: stats.year,
+    firstSessionDate: formatLocalDate(stats.firstSessionDate),
+    totalSessions: stats.totalSessions,
+    totalMessages: stats.totalMessages,
+    totalProjects: stats.totalProjects,
+    totalTokens: stats.totalTokens,
+    topModels: stats.topModels.map((model) => ({ name: model.name })),
+    maxStreakDays,
+    dailyActivity,
+    mostActiveDay: stats.mostActiveDay,
+    weekdayActivity: stats.weekdayActivity,
+  };
+}
+
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function parseCliArgs(args: string[]): ParsedArgs {
   const result: ParsedArgs = {
     help: false,
@@ -269,6 +317,7 @@ function parseCliArgs(args: string[]): ParsedArgs {
     noPreview: false,
     autoSave: false,
     statsOnly: false,
+    statsFull: false,
   };
 
   for (let i = 0; i < args.length; i += 1) {
@@ -318,6 +367,12 @@ function parseCliArgs(args: string[]): ParsedArgs {
 
     if (arg === "--stats" || arg === "--print-stats") {
       result.statsOnly = true;
+      continue;
+    }
+
+    if (arg === "--stats-full") {
+      result.statsOnly = true;
+      result.statsFull = true;
       continue;
     }
 

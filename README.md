@@ -32,7 +32,8 @@ npm install && npm start
 | `--output, -o`  | Output path for saved image (or pass a single positional path)  |
 | `--codex-home`  | Use a custom Codex data directory (defaults to $CODEX_HOME or ~/.codex) |
 | `--no-preview`  | Skip inline image preview                                 |
-| `--stats`       | Print stats as JSON and exit (no images)                  |
+| `--stats`       | Print minimal stats as JSON and exit (no images)          |
+| `--stats-full`  | Print full stats as JSON for debugging                    |
 | `--help, -h`    | Show help message                                         |
 | `--version, -v` | Show version number                                       |
 

@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("codex-wrapped e2e", () => {
-  it("prints stats JSON from fixtures", () => {
+  it("prints full stats JSON from fixtures", () => {
     const root = process.cwd();
     const cliPath = resolve(root, "dist", "index.js");
     const fixturesPath = resolve(root, "test", "fixtures", ".codex");
@@ -14,7 +14,7 @@ describe("codex-wrapped e2e", () => {
 
     const result = spawnSync(
       "node",
-      [cliPath, "--stats", "--codex-home", fixturesPath],
+      [cliPath, "--stats-full", "--codex-home", fixturesPath],
       {
         encoding: "utf8",
         env: {
@@ -34,6 +34,7 @@ describe("codex-wrapped e2e", () => {
       totalSessions: number;
       totalMessages: number;
       totalProjects: number;
+      firstSessionDate: string;
       totalInputTokens: number;
       totalCachedInputTokens: number;
       totalOutputTokens: number;
@@ -46,6 +47,7 @@ describe("codex-wrapped e2e", () => {
     };
 
     expect(stats.year).toBe(2025);
+    expect(stats.firstSessionDate).toBe("2025-12-31");
     expect(stats.totalSessions).toBe(1);
     expect(stats.totalMessages).toBe(2);
     expect(stats.totalProjects).toBe(1);
@@ -63,5 +65,44 @@ describe("codex-wrapped e2e", () => {
       date: "2025-12-31",
       count: 2,
     });
+  });
+
+  it("prints minimal stats JSON from fixtures", () => {
+    const root = process.cwd();
+    const cliPath = resolve(root, "dist", "index.js");
+    const fixturesPath = resolve(root, "test", "fixtures", ".codex");
+
+    const result = spawnSync(
+      "node",
+      [cliPath, "--stats", "--codex-home", fixturesPath],
+      {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          CODEX_WRAPPED_NO_PREVIEW: "1",
+        },
+      }
+    );
+
+    expect(result.status, result.stderr).toBe(0);
+
+    const output = result.stdout.trim();
+    const stats = JSON.parse(output) as Record<string, unknown>;
+
+    expect(stats.year).toBe(2025);
+    expect(stats.firstSessionDate).toBe("2025-12-31");
+    expect(stats.totalSessions).toBe(1);
+    expect(stats.totalMessages).toBe(2);
+    expect(stats.totalProjects).toBe(1);
+    expect(stats.totalTokens).toBe(25917);
+
+    expect(stats.totalInputTokens).toBeUndefined();
+    expect(stats.totalCachedInputTokens).toBeUndefined();
+    expect(stats.totalOutputTokens).toBeUndefined();
+    expect(stats.totalReasoningTokens).toBeUndefined();
+    expect(stats.topProviders).toBeUndefined();
+    expect(stats.maxStreak).toBeUndefined();
+    expect(stats.currentStreak).toBeUndefined();
+    expect(stats.daysSinceFirstSession).toBeUndefined();
   });
 });
