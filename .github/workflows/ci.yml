@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-run:
+    name: Test and run (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+        node: [20]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+      - name: Install and run wrapped
+        shell: bash
+        run: |
+          FIXTURES_PATH="$(node -e "const path=require('path'); console.log(path.join(process.env.GITHUB_WORKSPACE,'test','fixtures','.codex'))")"
+          OUTPUT_PATH="$(node -e "const path=require('path'); console.log(path.join(process.env.RUNNER_TEMP || process.env.TMP || process.env.TEMP || '.', 'codex-wrapped-test.png'))")"
+          npm ci
+          npm start -- -y --output "$OUTPUT_PATH" --codex-home "$FIXTURES_PATH" --no-preview
+          ls -lh "$OUTPUT_PATH"
