@@ -11,7 +11,7 @@ Generate a personalized "Spotify Wrapped"-style summary of your [Codex](https://
 
 ---
 
-## Installation
+## Install & Run
 
 This repo is meant to be run from source. Please do **not** install the
 `codex-wrapped` package from the npm registry (it's a different package).
@@ -101,4 +101,3 @@ npm run build
 - **Image Generation**: [Satori](https://github.com/vercel/satori) + [Resvg](https://github.com/yisibl/resvg-js)
 - **CLI UI**: [@clack/prompts](https://github.com/bombshell-dev/clack)
 - **Font**: [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono)
-
