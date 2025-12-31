@@ -10,10 +10,10 @@ type ModelUsageTotals = {
   totalTokens: number;
 };
 
-export async function calculateStats(year: number): Promise<CodexStats> {
+export async function calculateStats(year: number, codexHome?: string): Promise<CodexStats> {
   await fetchModelsData();
 
-  const usageData = await collectCodexUsageData(year);
+  const usageData = await collectCodexUsageData(year, codexHome);
   const dailyActivity = usageData.dailyActivity;
   const weekdayCounts: [number, number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0, 0];
 
@@ -94,7 +94,7 @@ export async function calculateStats(year: number): Promise<CodexStats> {
   const mostActiveDay = findMostActiveDay(dailyActivity);
   const weekdayActivity = buildWeekdayActivity(weekdayCounts);
 
-  const historyFirstTs = await getCodexFirstPromptTimestamp();
+  const historyFirstTs = await getCodexFirstPromptTimestamp(codexHome);
   const historyDate = historyFirstTs ? new Date(historyFirstTs * 1000) : null;
   let firstSessionDate = usageData.earliestSessionDate ?? historyDate ?? new Date();
   const firstActivityDate = findFirstActivityDate(dailyActivity);

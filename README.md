@@ -30,7 +30,9 @@ npm install && npm start
 | --------------- | --------------------------------------------------------- |
 | `--yes, -y`     | Auto-accept the save prompt                               |
 | `--output, -o`  | Output path for saved image (or pass a single positional path)  |
+| `--codex-home`  | Use a custom Codex data directory (defaults to $CODEX_HOME or ~/.codex) |
 | `--no-preview`  | Skip inline image preview                                 |
+| `--stats`       | Print stats as JSON and exit (no images)                  |
 | `--help, -h`    | Show help message                                         |
 | `--version, -v` | Show version number                                       |
 
@@ -74,6 +76,8 @@ Codex Wrapped reads data from your local Codex CLI installation:
 ```
 ~/.codex/ (history.jsonl, sessions, logs)
 ```
+
+You can override the data directory with `--codex-home` or by setting `CODEX_HOME`.
 
 No data is sent anywhere. Everything is processed locally.
 

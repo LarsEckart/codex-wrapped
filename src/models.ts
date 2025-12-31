@@ -22,6 +22,12 @@ export async function fetchModelsData(): Promise<ModelsDevData> {
     return cachedData;
   }
 
+  if (typeof fetch !== "function") {
+    console.warn("Fetch is unavailable, using fallback models data");
+    cachedData = { models: {}, providers: {} };
+    return cachedData;
+  }
+
   try {
     const response = await fetch("https://models.dev/api.json", {
       signal: AbortSignal.timeout(5000),

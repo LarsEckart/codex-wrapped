@@ -1,12 +1,35 @@
 // Data collector - reads Codex CLI storage and returns raw data
 
 import { readFile, readdir, stat } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import os from "node:os";
 
-const CODEX_DATA_PATH = join(os.homedir(), ".codex");
-const CODEX_HISTORY_PATH = join(CODEX_DATA_PATH, "history.jsonl");
-const CODEX_SESSIONS_PATH = join(CODEX_DATA_PATH, "sessions");
+type CodexPaths = {
+  codexHome: string;
+  historyPath: string;
+  sessionsPath: string;
+};
+
+export function resolveCodexHome(input?: string): string {
+  const raw = (input && input.trim() !== "" ? input : process.env.CODEX_HOME) ??
+    join(os.homedir(), ".codex");
+
+  if (raw === "~") return os.homedir();
+  if (raw.startsWith("~/") || raw.startsWith("~\\")) {
+    return resolve(join(os.homedir(), raw.slice(2)));
+  }
+
+  return resolve(raw);
+}
+
+function getCodexPaths(codexHome?: string): CodexPaths {
+  const resolvedHome = resolveCodexHome(codexHome);
+  return {
+    codexHome: resolvedHome,
+    historyPath: join(resolvedHome, "history.jsonl"),
+    sessionsPath: join(resolvedHome, "sessions"),
+  };
+}
 
 // Concurrency limit for parallel file processing
 const CONCURRENCY_LIMIT = 50;
@@ -30,17 +53,19 @@ export interface CodexUsageData {
   earliestSessionDate: Date | null;
 }
 
-export async function checkCodexDataExists(): Promise<boolean> {
+export async function checkCodexDataExists(codexHome?: string): Promise<boolean> {
   try {
-    const info = await stat(CODEX_SESSIONS_PATH);
+    const { sessionsPath } = getCodexPaths(codexHome);
+    const info = await stat(sessionsPath);
     return info.isDirectory();
   } catch {
     return false;
   }
 }
 
-export async function listCodexSessionFiles(year: number): Promise<string[]> {
-  const yearPath = join(CODEX_SESSIONS_PATH, String(year));
+export async function listCodexSessionFiles(year: number, codexHome?: string): Promise<string[]> {
+  const { sessionsPath } = getCodexPaths(codexHome);
+  const yearPath = join(sessionsPath, String(year));
   const files: string[] = [];
 
   let monthDirs: Array<string> = [];
@@ -89,9 +114,10 @@ export async function listCodexSessionFiles(year: number): Promise<string[]> {
   return monthResults.flat();
 }
 
-export async function getCodexFirstPromptTimestamp(): Promise<number | null> {
+export async function getCodexFirstPromptTimestamp(codexHome?: string): Promise<number | null> {
   try {
-    const raw = await readFile(CODEX_HISTORY_PATH, "utf8");
+    const { historyPath } = getCodexPaths(codexHome);
+    const raw = await readFile(historyPath, "utf8");
     let minTs: number | null = null;
     for (const line of raw.split("\n")) {
       if (!line.trim()) continue;
@@ -262,8 +288,8 @@ async function processFilesInParallel(files: string[]): Promise<FileProcessResul
   return results;
 }
 
-export async function collectCodexUsageData(year: number): Promise<CodexUsageData> {
-  const files = await listCodexSessionFiles(year);
+export async function collectCodexUsageData(year: number, codexHome?: string): Promise<CodexUsageData> {
+  const files = await listCodexSessionFiles(year, codexHome);
   
   // Process all files in parallel
   const fileResults = await processFilesInParallel(files);

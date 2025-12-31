@@ -4,11 +4,12 @@ import * as p from "@clack/prompts";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import { checkCodexDataExists } from "./collector.js";
+import { checkCodexDataExists, resolveCodexHome } from "./collector.js";
 import { calculateStats } from "./stats.js";
 import { generateDisplayImage, generateFullImage } from "./image/generator.js";
 import { displayInTerminal, getTerminalName, shouldSkipInlinePreview } from "./terminal/display.js";
 import { formatNumber } from "./utils/format.js";
+import type { CodexStats } from "./types.js";
 
 const VERSION = "1.0.0";
 const FIXED_YEAR = 2025;
@@ -26,13 +27,16 @@ USAGE:
 OPTIONS:
   --yes, -y        Auto-accept the save prompt
   --output, -o     Output path for saved image (or pass a single positional path)
+  --codex-home     Use a custom Codex data directory (defaults to $CODEX_HOME or ~/.codex)
   --no-preview     Skip inline image preview
+  --stats          Print stats as JSON and exit (no images)
   --help, -h       Show this help message
   --version, -v    Show version number
 
 EXAMPLES:
   codex-wrapped              # Generate 2025 wrapped
   codex-wrapped -y /tmp/codex-wrapped.png  # Auto-save to a specific path
+  codex-wrapped --stats      # Print stats as JSON and exit
 `);
 }
 
@@ -50,15 +54,43 @@ async function main() {
     process.exit(0);
   }
 
+  const requestedYear = FIXED_YEAR;
+  const codexHome = resolveCodexHome(values.codexHome);
+
+  if (values.statsOnly) {
+    const dataExists = await checkCodexDataExists(codexHome);
+    if (!dataExists) {
+      console.error(`Codex data not found in ${codexHome}`);
+      process.exit(1);
+    }
+
+    let stats: CodexStats;
+    try {
+      stats = await calculateStats(requestedYear, codexHome);
+    } catch (error) {
+      console.error(`Failed to collect stats: ${error}`);
+      process.exit(1);
+    }
+
+    if (stats.totalSessions === 0) {
+      console.error(`No Codex activity found for ${requestedYear}`);
+      process.exit(1);
+    }
+
+    console.log(JSON.stringify(serializeStats(stats), null, 2));
+    process.exit(0);
+  }
+
   p.intro("codex wrapped");
 
-  const requestedYear = FIXED_YEAR;
   const skipPreview =
     values.noPreview || process.env.CODEX_WRAPPED_NO_PREVIEW === "1" || shouldSkipInlinePreview();
 
-  const dataExists = await checkCodexDataExists();
+  const dataExists = await checkCodexDataExists(codexHome);
   if (!dataExists) {
-    p.cancel("Codex data not found in ~/.codex\n\nMake sure you have used Codex at least once.");
+    p.cancel(
+      `Codex data not found in ${codexHome}\n\nMake sure you have used Codex at least once.`
+    );
     process.exit(0);
   }
 
@@ -67,7 +99,7 @@ async function main() {
 
   let stats;
   try {
-    stats = await calculateStats(requestedYear);
+    stats = await calculateStats(requestedYear, codexHome);
   } catch (error) {
     spinner.stop("Failed to collect stats");
     p.cancel(`Error: ${error}`);
@@ -177,10 +209,67 @@ type ParsedArgs = {
   noPreview: boolean;
   autoSave: boolean;
   outputPath?: string;
+  codexHome?: string;
+  statsOnly: boolean;
 };
 
+type SerializedStats = {
+  year: number;
+  firstSessionDate: string;
+  daysSinceFirstSession: number;
+  totalSessions: number;
+  totalMessages: number;
+  totalProjects: number;
+  totalInputTokens: number;
+  totalCachedInputTokens: number;
+  totalOutputTokens: number;
+  totalReasoningTokens: number;
+  totalTokens: number;
+  topModels: CodexStats["topModels"];
+  topProviders: CodexStats["topProviders"];
+  maxStreak: number;
+  currentStreak: number;
+  maxStreakDays: string[];
+  dailyActivity: Array<[string, number]>;
+  mostActiveDay: CodexStats["mostActiveDay"];
+  weekdayActivity: CodexStats["weekdayActivity"];
+};
+
+function serializeStats(stats: CodexStats): SerializedStats {
+  const dailyActivity = Array.from(stats.dailyActivity.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  const maxStreakDays = Array.from(stats.maxStreakDays).sort();
+
+  return {
+    year: stats.year,
+    firstSessionDate: stats.firstSessionDate.toISOString(),
+    daysSinceFirstSession: stats.daysSinceFirstSession,
+    totalSessions: stats.totalSessions,
+    totalMessages: stats.totalMessages,
+    totalProjects: stats.totalProjects,
+    totalInputTokens: stats.totalInputTokens,
+    totalCachedInputTokens: stats.totalCachedInputTokens,
+    totalOutputTokens: stats.totalOutputTokens,
+    totalReasoningTokens: stats.totalReasoningTokens,
+    totalTokens: stats.totalTokens,
+    topModels: stats.topModels,
+    topProviders: stats.topProviders,
+    maxStreak: stats.maxStreak,
+    currentStreak: stats.currentStreak,
+    maxStreakDays,
+    dailyActivity,
+    mostActiveDay: stats.mostActiveDay,
+    weekdayActivity: stats.weekdayActivity,
+  };
+}
+
 function parseCliArgs(args: string[]): ParsedArgs {
-  const result: ParsedArgs = { help: false, version: false, noPreview: false, autoSave: false };
+  const result: ParsedArgs = {
+    help: false,
+    version: false,
+    noPreview: false,
+    autoSave: false,
+    statsOnly: false,
+  };
 
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
@@ -213,6 +302,22 @@ function parseCliArgs(args: string[]): ParsedArgs {
       }
       result.outputPath = value;
       i += 1;
+      continue;
+    }
+
+    if (arg === "--codex-home") {
+      const value = args[i + 1];
+      if (!value || value.startsWith("-")) {
+        console.error("Error: --codex-home requires a value");
+        process.exit(1);
+      }
+      result.codexHome = value;
+      i += 1;
+      continue;
+    }
+
+    if (arg === "--stats" || arg === "--print-stats") {
+      result.statsOnly = true;
       continue;
     }
 
