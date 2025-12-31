@@ -165,7 +165,7 @@ export const layout = {
   // Canvas dimensions
   canvas: {
     width: 1500,
-    height: 1400,
+    height: 1200,
   },
 
   // Container padding
