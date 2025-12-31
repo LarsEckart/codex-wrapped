@@ -98,24 +98,7 @@ npm run build
 ## Tech Stack
 
 - **Runtime**: Node.js
-- **Image Generation**: [Satori](https://github.com/vercel/satori) + [Resvg](https://github.com/nicolo-ribaudo/resvg-js)
-- **CLI UI**: [@clack/prompts](https://github.com/natemoo-re/clack)
-- **Font**: IBM Plex Mono
+- **Image Generation**: [Satori](https://github.com/vercel/satori) + [Resvg](https://github.com/yisibl/resvg-js)
+- **CLI UI**: [@clack/prompts](https://github.com/bombshell-dev/clack)
+- **Font**: [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono)
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-<div align="center">
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
-Built for the Codex community
-
-</div>
