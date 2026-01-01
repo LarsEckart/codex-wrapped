@@ -11,7 +11,7 @@ import { displayInTerminal, getTerminalName, shouldSkipInlinePreview } from "./t
 import { formatNumber } from "./utils/format.js";
 import type { CodexStats } from "./types.js";
 
-const VERSION = "1.0.0";
+const VERSION = "1.2.0";
 const FIXED_YEAR = 2025;
 const PROFILE = process.env.CODEX_WRAPPED_PROFILE === "1";
 
@@ -29,6 +29,7 @@ OPTIONS:
   --output, -o     Output path for saved image (or pass a single positional path)
   --codex-home     Use a custom Codex data directory (defaults to $CODEX_HOME or ~/.codex)
   --no-preview     Skip inline image preview
+  --year           Year to generate stats for (defaults to 2025)
   --stats          Print stats as JSON and exit (no images)
   --stats-full     Print full stats JSON for debugging
   --help, -h       Show this help message
@@ -36,6 +37,7 @@ OPTIONS:
 
 EXAMPLES:
   codex-wrapped              # Generate 2025 wrapped
+  codex-wrapped --year 2026  # Generate 2026 wrapped
   codex-wrapped -y /tmp/codex-wrapped.png  # Auto-save to a specific path
   codex-wrapped --stats      # Print minimal stats as JSON and exit
   codex-wrapped --stats-full # Print full stats JSON for debugging
@@ -56,7 +58,7 @@ async function main() {
     process.exit(0);
   }
 
-  const requestedYear = FIXED_YEAR;
+  const requestedYear = values.year ?? FIXED_YEAR;
   const codexHome = resolveCodexHome(values.codexHome);
 
   if (values.statsOnly) {
@@ -213,6 +215,7 @@ type ParsedArgs = {
   autoSave: boolean;
   outputPath?: string;
   codexHome?: string;
+  year?: number;
   statsOnly: boolean;
   statsFull: boolean;
 };
@@ -361,6 +364,22 @@ function parseCliArgs(args: string[]): ParsedArgs {
         process.exit(1);
       }
       result.codexHome = value;
+      i += 1;
+      continue;
+    }
+
+    if (arg === "--year") {
+      const value = args[i + 1];
+      if (!value || value.startsWith("-")) {
+        console.error("Error: --year requires a value");
+        process.exit(1);
+      }
+      const parsed = Number(value);
+      if (!Number.isInteger(parsed)) {
+        console.error("Error: --year must be an integer");
+        process.exit(1);
+      }
+      result.year = parsed;
       i += 1;
       continue;
     }
